@@ -12,7 +12,7 @@ A Python library for data quality validation of analytical datasets. Conceptuall
 
 **Core philosophy**:
 - The **universe dataset** defines the population. All quality metrics are measured against it, never against raw variable dataset sizes.
-- Everything is a **composable pipeline** — metadata builders, tests, and resolvers all follow the same composable, step-based pattern.
+- Everything is a **composable pipeline** — metadata builders, checks, and resolvers all follow the same composable, step-based pattern.
 - The framework **executes SQL, it does not generate it**. SQL is the user's responsibility; the framework orchestrates execution and validation.
 - **Thresholds are business decisions**, not learned parameters. No sklearn-style `fit` on tests.
 
@@ -40,9 +40,9 @@ Semantic type, richer than storage dtype:
 **`VariableRole` (Enum)**
 `FEATURE`, `TARGET`, `IDENTIFIER`, `AUXILIARY`
 
-**`TestResult` (Value Object — immutable)**
+**`CheckResult` (Value Object — immutable)**
 Produced by a single test applied to a single variable.
-- `test_name: str`
+- `check_name: str`
 - `passed: bool`
 - `severity: Severity`
 - `observed_value: Any` — raw metric (e.g. count of nulls)
@@ -71,10 +71,10 @@ Represents a single column: its description, accumulated metadata, and test resu
 - `role: VariableRole`
 - `metadata: dict` — open dictionary populated by metadata builders (e.g. `{"semantic_dtype": "NUMERIC_CONTINUOUS", "empirical_null_rate": 0.03, "cardinality": 4}`)
 - `status: ValidationStatus` — recomputed each time a result is attached
-- `test_results: List[TestResult]`
+- `test_results: List[CheckResult]`
 
 Methods:
-- `attach_result(result: TestResult)` — appends result, recomputes status. A single FAILURE sets status to FAILED; WARNING alone sets to PASSED with warnings.
+- `attach_result(result: CheckResult)` — appends result, recomputes status. A single FAILURE sets status to FAILED; WARNING alone sets to PASSED with warnings.
 - `summary() -> dict` — consolidated view across all results.
 
 ---
@@ -99,7 +99,7 @@ Abstracts SQL execution and DataFrame materialization. Each dataset instance car
 
 ### Layer 4 — Metadata Subsystem
 
-Dynamically profiles each column to populate `Variable.metadata`. Metadata feeds the `TestSuiteResolver` dispatch logic — its quality directly determines the quality of test selection.
+Dynamically profiles each column to populate `Variable.metadata`. Metadata feeds the `CheckSuiteResolver` dispatch logic — its quality directly determines the quality of test selection.
 
 **`BaseMetadataBuilder` (Abstract)**
 - `name: str`
@@ -121,7 +121,7 @@ Dynamically profiles each column to populate `Variable.metadata`. Metadata feeds
 
 ---
 
-### Layer 5 — Test Abstractions and TestPipeline
+### Layer 5 — Test Abstractions and CheckPipeline
 
 **`BaseCrossSectionalTest` (Abstract)**
 Point-in-time tests. Operate on the entity-level universe-joined DataFrame.
@@ -129,47 +129,47 @@ Point-in-time tests. Operate on the entity-level universe-joined DataFrame.
 - `severity: Severity`
 - `params: dict` — business thresholds declared at construction (e.g. `{"threshold": 0.10}`)
 - `calibrate(reference_data: pd.DataFrame)` — optional; for statistical baselines (e.g. reference distribution for drift tests). Named deliberately differently from sklearn's `fit`.
-- `check(data: pd.DataFrame, variable: Variable) -> TestResult` — executes validation
+- `check(data: pd.DataFrame, variable: Variable) -> CheckResult` — executes validation
 
 **`BaseLongitudinalTest` (Abstract)**
 Time-aware tests. Require temporal aggregation before execution.
 - Everything in `BaseCrossSectionalTest`, plus:
 - `aggregation_sql(variable_name: str, time_field: str, period: str) -> str` — returns the SQL aggregation to execute engine-side. The framework calls this to generate a time-indexed summary, brings it back as a small pandas DataFrame, then calls `check()`.
-- `check(time_series_data: pd.DataFrame, variable: Variable) -> TestResult` — receives the aggregated time-series, not raw entity-level data
+- `check(time_series_data: pd.DataFrame, variable: Variable) -> CheckResult` — receives the aggregated time-series, not raw entity-level data
 
-**`TestPipeline`**
-- `steps: List[Tuple[str, BaseTest]]` — named steps; supports `BaseCrossSectionalTest` and `BaseLongitudinalTest` mixed in the same pipeline
+**`CheckPipeline`**
+- `steps: List[Tuple[str, BaseCheck]]` — named steps; supports `BaseCrossSectionalTest` and `BaseLongitudinalTest` mixed in the same pipeline
 - `stop_on_failure: bool` — short-circuits on first FAILURE-severity result
-- `run(data, variable: Variable) -> List[TestResult]`
-- Composite: a `TestPipeline` can itself be a step inside another `TestPipeline`
+- `run(data, variable: Variable) -> List[CheckResult]`
+- Composite: a `CheckPipeline` can itself be a step inside another `CheckPipeline`
 
 ---
 
-### Layer 6 — TestSuiteResolver
+### Layer 6 — CheckSuiteResolver
 
-Dispatches the right `TestPipeline` to each `Variable` based on its metadata. Contains no hardcoded logic — all rules are registered externally.
+Dispatches the right `CheckPipeline` to each `Variable` based on its metadata. Contains no hardcoded logic — all rules are registered externally.
 
-**`TestSuiteResolver`**
-- `rules: List[Tuple[Callable[[Variable], bool], Callable[[], TestPipeline], int]]` — ordered list of (predicate, pipeline factory, priority)
+**`CheckSuiteResolver`**
+- `rules: List[Tuple[Callable[[Variable], bool], Callable[[], CheckPipeline], int]]` — ordered list of (predicate, pipeline factory, priority)
 - `register(predicate, pipeline_factory, priority=0)` — adds a rule; higher priority evaluated first
-- `resolve(variable: Variable) -> TestPipeline` — walks rules in priority order, returns first match
-- `resolve_all(variables: List[Variable]) -> Dict[str, TestPipeline]`
+- `resolve(variable: Variable) -> CheckPipeline` — walks rules in priority order, returns first match
+- `resolve_all(variables: List[Variable]) -> Dict[str, CheckPipeline]`
 
 Predicates can inspect any field in `Variable` or `variable.metadata`, enabling rich dispatch:
 ```
 resolver.register(
     predicate = lambda v: v.metadata.get("semantic_dtype") == "NUMERIC_CONTINUOUS" and not v.nullable,
-    factory   = lambda: TestPipeline([("nulls", NullRateCheck({"threshold": 0.0})), ("range", RangeCheck({"min": 0}))]),
+    factory   = lambda: CheckPipeline([("nulls", NullRateCheck({"threshold": 0.0})), ("range", RangeCheck({"min": 0}))]),
     priority  = 10
 )
 resolver.register(
     predicate = lambda v: v.role == VariableRole.TARGET,
-    factory   = lambda: TestPipeline([("drift", DistributionDriftTest({"period": "month"}))]),
+    factory   = lambda: CheckPipeline([("drift", DistributionDriftTest({"period": "month"}))]),
     priority  = 20  # target variables get drift tests regardless of dtype
 )
 resolver.register(
     predicate = lambda v: True,   # catch-all
-    factory   = lambda: TestPipeline([("nulls", NullRateCheck({"threshold": 0.20}))]),
+    factory   = lambda: CheckPipeline([("nulls", NullRateCheck({"threshold": 0.20}))]),
     priority  = 0
 )
 ```
@@ -204,15 +204,15 @@ Methods:
 - `validate_pk_uniqueness(data) -> ValidationResult`
 - `validate_join_integrity(data, universe_data) -> ValidationResult` — verifies join does not fan out universe rows
 - `resolve_variables(data: pd.DataFrame, builder_pipeline: MetadataBuilderPipeline) -> List[Variable]` — inspects materialized DataFrame, runs each column through the builder pipeline
-- `run_validation(resolver: TestSuiteResolver) -> ValidationReport` — main method; see below
+- `run_validation(resolver: CheckSuiteResolver) -> ValidationReport` — main method; see below
 
 **`run_validation` orchestration**:
 1. Materialize universe and variables (left join)
 2. Run dataset-level invariant checks (PK uniqueness, join integrity)
 3. Call `resolve_variables()` if `self.variables` is empty
-4. Call `resolver.resolve_all(self.variables)` to get per-variable pipelines
+4. Call `resolver.resolve_all(self.variables)` to get per-variable check pipelines
 5. For each variable: if pipeline contains only cross-sectional tests → run against the entity-level DataFrame. If pipeline contains longitudinal tests → generate the aggregation SQL via `aggregation_sql()`, execute it through the adapter, run against the returned time-series DataFrame.
-6. Attach all `TestResult`s to their respective `Variable` instances
+6. Attach all `CheckResult`s to their respective `Variable` instances
 7. Assemble and return a `ValidationReport`
 
 ---
@@ -225,13 +225,13 @@ The top-level output of `run_validation`.
 - `dataset_name: str`
 - `run_timestamp: datetime`
 - `dataset_level_checks: List[ValidationResult]`
-- `variable_reports: Dict[str, List[TestResult]]` — keyed by variable name
+- `variable_reports: Dict[str, List[CheckResult]]` — keyed by variable name
 - `overall_status: ValidationStatus`
 
 Methods:
 - `to_dataframe() -> pd.DataFrame` — flat tabular summary suitable for logging or storage
 - `failed_variables() -> List[str]`
-- `warnings() -> List[TestResult]`
+- `warnings() -> List[CheckResult]`
 - `render(output_path: Optional[str]) -> str` — materializes all `figure_factory` callables, assembles HTML report, optionally writes to file
 
 ---
@@ -240,15 +240,15 @@ Methods:
 
 | Decision | Rationale |
 |---|---|
-| No `fit` on `BaseTest` | Thresholds are business decisions, not learned. Use `params: dict` at construction. Optional `calibrate()` for statistical baselines only. |
+| No `fit` on `BaseCheck` | Thresholds are business decisions, not learned. Use `params: dict` at construction. Optional `calibrate()` for statistical baselines only. |
 | No `fit` on `BaseMetadataBuilder` | Profilers inspect, they do not learn. Method is `profile(series, variable) -> dict`. |
 | Universe as left join anchor | Percentage-based metrics must use universe size as denominator. Raw variable dataset size is misleading (can be much larger or smaller than population). |
 | `__vd_matched__` flag column | Distinguishes structural nulls (entity absent from variables dataset) from value nulls (entity present, value is null). Tests can optionally use this for root-cause breakdown. |
 | `DataSourceAdapter` per dataset | Enables multi-engine setups (e.g. Databricks for universe, Oracle for variables) without framework-level SQL federation. Default cross-engine join strategy: materialize both to pandas, join in-memory. |
 | SQL dialect is user responsibility | Framework executes SQL, does not generate it. The `sql` attribute is always user-authored in the target engine's dialect. |
 | Two test families | Cross-sectional tests receive entity-level data; longitudinal tests declare their aggregation SQL and receive a time-indexed summary. Dispatch happens in `run_validation`. |
-| `figure_factory` as lazy callable | Plots are only rendered when requested (e.g. at report generation time). Keeps `TestResult` lightweight. |
-| `TestSuiteResolver` is external to datasets | Dataset classes have no dispatch logic. The resolver is injected at `run_validation` call time, making dispatch strategies swappable. |
+| `figure_factory` as lazy callable | Plots are only rendered when requested (e.g. at report generation time). Keeps `CheckResult` lightweight. |
+| `CheckSuiteResolver` is external to datasets | Dataset classes have no dispatch logic. The resolver is injected at `run_validation` call time, making dispatch strategies swappable. |
 | Metadata drives dispatch | The richer the metadata, the better the resolver's decisions. `SemanticTypeInferenceBuilder` is critical for bronze-layer data where storage dtype (varchar) differs from semantic dtype (numeric). |
 
 ---
@@ -263,10 +263,10 @@ Each plan is independently completable and testable before the next begins.
 Directory structure, package layout, dependency management (`pyproject.toml`), linting and formatting configuration (`ruff`, `mypy`), CI skeleton (GitHub Actions), test framework setup (`pytest`).
 
 ### Plan 2 — Core Primitives and Value Objects
-All enumerations (`DataType`, `ValidationStatus`, `Severity`, `EngineType`, `VariableRole`) and immutable value objects (`TestResult`, `ValidationResult`). Full unit test coverage. These are the atoms — everything else depends on them.
+All enumerations (`DataType`, `ValidationStatus`, `Severity`, `EngineType`, `VariableRole`) and immutable value objects (`CheckResult`, `ValidationResult`). Full unit test coverage. These are the atoms — everything else depends on them.
 
 ### Plan 3 — The Variable Class
-`Variable` with metadata dict, status, and test results collection. `attach_result()` with status recomputation logic. `summary()`. Full unit tests.
+`Variable` with metadata dict, status, and check results collection. `attach_result()` with status recomputation logic. `summary()`. Full unit tests.
 
 ### Plan 4 — DataSourceAdapter Abstraction and Implementations
 Abstract `DataSourceAdapter`. Concrete: `SQLAlchemyAdapter`, `DatabricksAdapter`, `SparkAdapter`, `MockAdapter`. Integration tests using `MockAdapter`.
@@ -274,10 +274,10 @@ Abstract `DataSourceAdapter`. Concrete: `SQLAlchemyAdapter`, `DatabricksAdapter`
 ### Plan 5 — Metadata Subsystem
 Abstract `BaseMetadataBuilder`, `MetadataBuilderPipeline`. Core concrete builders: `StorageDtypeBuilder`, `NullabilityProfileBuilder`, `CardinalityBuilder`, `DistributionShapeBuilder`, `SemanticTypeInferenceBuilder`. Unit tests for each builder and the pipeline.
 
-### Plan 6 — Test Abstractions and TestPipeline
-`BaseCrossSectionalTest`, `BaseLongitudinalTest` with `params: dict` and optional `calibrate()`. `TestPipeline` with Composite pattern and `stop_on_failure`. No concrete tests yet — just the abstractions and full unit tests.
+### Plan 6 — Test Abstractions and CheckPipeline
+`BaseCrossSectionalTest`, `BaseLongitudinalTest` with `params: dict` and optional `calibrate()`. `CheckPipeline` with Composite pattern and `stop_on_failure`. No concrete tests yet — just the abstractions and full unit tests.
 
-### Plan 7 — TestSuiteResolver
+### Plan 7 — CheckSuiteResolver
 Registry with predicate-based rule registration, priority ordering, `resolve()` and `resolve_all()`. Unit tests covering priority ordering, catch-all fallback, and edge cases.
 
 ### Plan 8 — Dataset Classes and Materialization
@@ -296,7 +296,7 @@ Time-aware tests: `DistributionDriftTest`, `StructuralBreakTest`, `TrendTest`, `
 Full `ValidationReport` structure, `to_dataframe()`, `render()` with figure materialization and HTML assembly, plot embedding via base64. Unit tests for all output formats.
 
 ### Plan 13 — Default Test Suite Configuration
-Pre-configured `TestSuiteResolver` with sensible default rules for common variable types. Pre-built pipelines users can adopt out of the box. This is the "batteries included" layer.
+Pre-configured `CheckSuiteResolver` with sensible default rules for common variable types. Pre-built pipelines users can adopt out of the box. This is the "batteries included" layer.
 
 ### Plan 14 — Integration Tests and Worked Examples
 End-to-end tests using `MockAdapter` covering the full path from SQL definition to `ValidationReport`. Worked examples as notebooks: multi-engine setup, longitudinal analysis, custom resolver rules, target variable drift.
@@ -315,7 +315,7 @@ API reference documentation (Sphinx or MkDocs), user guide with conceptual expla
         ├── 4 (DataSourceAdapter)   ← independent branch
         ├── 5 (Metadata subsystem)
         └── 6 (Test abstractions)
-            └── 7 (TestSuiteResolver)
+            └── 7 (CheckSuiteResolver)
                 └── 8 (Dataset classes) ← depends on 4, 5, 6, 7
                     └── 9 (run_validation)
                         ├── 10 (Cross-sectional tests)  ┐

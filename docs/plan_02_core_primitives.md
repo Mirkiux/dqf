@@ -21,7 +21,7 @@ Every subsequent plan depends on these types — nothing else can be built until
 
 | Class | Module | Purpose |
 |---|---|---|
-| `TestResult` | `dqf/results.py` | Output of a single test applied to a single variable |
+| `CheckResult` | `dqf/results.py` | Output of a single test applied to a single variable |
 | `ValidationResult` | `dqf/results.py` | Output of a dataset-level invariant check (PK uniqueness, join integrity) |
 
 ### Unit Tests
@@ -79,12 +79,12 @@ Members:
 
 ---
 
-### `TestResult` (frozen dataclass)
+### `CheckResult` (frozen dataclass)
 
 All fields are set at construction and cannot be mutated afterwards (`frozen=True`).
 
 Fields:
-- `test_name: str` — name of the test that produced this result
+- `check_name: str` — name of the check that produced this result
 - `passed: bool` — whether the test considered the variable to have passed
 - `severity: Severity` — impact level if the test failed
 - `observed_value: Any` — the raw metric computed (e.g. count of nulls: `5000`)
@@ -97,7 +97,7 @@ Fields:
 Validation at construction:
 - `population_size` must be a positive integer
 - `rate`, if provided, must be between 0.0 and 1.0
-- `test_name` must be a non-empty string
+- `check_name` must be a non-empty string
 
 ### `ValidationResult` (frozen dataclass)
 
@@ -124,7 +124,7 @@ tests/
 ## Definition of Done
 
 - [ ] All five enums implemented with the members specified above
-- [ ] `TestResult` frozen dataclass with field validation at construction
+- [ ] `CheckResult` frozen dataclass with field validation at construction
 - [ ] `ValidationResult` frozen dataclass
 - [ ] `figure_factory` excluded from `__eq__` and `__hash__`
 - [ ] `dqf/__init__.py` exports all public symbols

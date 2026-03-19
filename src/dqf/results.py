@@ -7,8 +7,8 @@ from dqf.enums import Severity
 
 
 @dataclass(frozen=True)
-class TestResult:
-    """Immutable output of a single test applied to a single variable.
+class CheckResult:
+    """Immutable output of a single check applied to a single variable.
 
     population_size is always the universe size — never the raw variable
     dataset size. This ensures percentage-based metrics are computed against
@@ -16,11 +16,11 @@ class TestResult:
 
     figure_factory, if provided, is a zero-argument callable that returns a
     matplotlib Figure. It is intentionally excluded from equality checks and
-    hashing so that two TestResult instances with identical metrics but
+    hashing so that two CheckResult instances with identical metrics but
     different plot implementations compare as equal.
     """
 
-    test_name: str
+    check_name: str
     passed: bool
     severity: Severity
     observed_value: Any
@@ -33,8 +33,8 @@ class TestResult:
     )
 
     def __post_init__(self) -> None:
-        if not self.test_name:
-            raise ValueError("test_name must be a non-empty string")
+        if not self.check_name:
+            raise ValueError("check_name must be a non-empty string")
         if self.population_size <= 0:
             raise ValueError(
                 f"population_size must be a positive integer, got {self.population_size}"

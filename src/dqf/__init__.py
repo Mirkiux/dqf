@@ -7,7 +7,7 @@ A composable, pipeline-based library for data quality validation of analytical d
 __version__ = "0.1.0"
 
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
-from dqf.results import TestResult, ValidationResult
+from dqf.results import CheckResult, ValidationResult
 
 __all__ = [
     "DataType",
@@ -15,6 +15,6 @@ __all__ = [
     "Severity",
     "ValidationStatus",
     "VariableRole",
-    "TestResult",
+    "CheckResult",
     "ValidationResult",
 ]

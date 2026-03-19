@@ -1,16 +1,16 @@
 import pytest
 
 from dqf.enums import Severity
-from dqf.results import TestResult, ValidationResult
+from dqf.results import CheckResult, ValidationResult
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def make_test_result(**overrides) -> TestResult:
+def make_check_result(**overrides) -> CheckResult:
     defaults = dict(
-        test_name="null_rate_check",
+        check_name="null_rate_check",
         passed=True,
         severity=Severity.FAILURE,
         observed_value=100,
@@ -19,90 +19,90 @@ def make_test_result(**overrides) -> TestResult:
         rate=0.10,
     )
     defaults.update(overrides)
-    return TestResult(**defaults)
+    return CheckResult(**defaults)
 
 
 # ---------------------------------------------------------------------------
-# TestResult
+# CheckResult
 # ---------------------------------------------------------------------------
 
-class TestTestResultConstruction:
+class TestCheckResultConstruction:
     def test_valid_construction(self):
-        result = make_test_result()
-        assert result.test_name == "null_rate_check"
+        result = make_check_result()
+        assert result.check_name == "null_rate_check"
         assert result.passed is True
         assert result.rate == 0.10
 
     def test_rate_none_is_allowed(self):
-        result = make_test_result(rate=None)
+        result = make_check_result(rate=None)
         assert result.rate is None
 
     def test_rate_zero_is_allowed(self):
-        result = make_test_result(rate=0.0, observed_value=0)
+        result = make_check_result(rate=0.0, observed_value=0)
         assert result.rate == 0.0
 
     def test_rate_one_is_allowed(self):
-        result = make_test_result(rate=1.0, observed_value=1000)
+        result = make_check_result(rate=1.0, observed_value=1000)
         assert result.rate == 1.0
 
-    def test_empty_test_name_raises(self):
-        with pytest.raises(ValueError, match="test_name"):
-            make_test_result(test_name="")
+    def test_empty_check_name_raises(self):
+        with pytest.raises(ValueError, match="check_name"):
+            make_check_result(check_name="")
 
     def test_zero_population_size_raises(self):
         with pytest.raises(ValueError, match="population_size"):
-            make_test_result(population_size=0)
+            make_check_result(population_size=0)
 
     def test_negative_population_size_raises(self):
         with pytest.raises(ValueError, match="population_size"):
-            make_test_result(population_size=-1)
+            make_check_result(population_size=-1)
 
     def test_rate_above_one_raises(self):
         with pytest.raises(ValueError, match="rate"):
-            make_test_result(rate=1.01)
+            make_check_result(rate=1.01)
 
     def test_rate_below_zero_raises(self):
         with pytest.raises(ValueError, match="rate"):
-            make_test_result(rate=-0.01)
+            make_check_result(rate=-0.01)
 
 
-class TestTestResultImmutability:
+class TestCheckResultImmutability:
     def test_cannot_set_attribute(self):
-        result = make_test_result()
+        result = make_check_result()
         with pytest.raises((AttributeError, TypeError)):
             result.passed = False  # type: ignore[misc]
 
 
-class TestTestResultEquality:
+class TestCheckResultEquality:
     def test_equal_results(self):
-        r1 = make_test_result()
-        r2 = make_test_result()
+        r1 = make_check_result()
+        r2 = make_check_result()
         assert r1 == r2
 
     def test_different_figure_factory_still_equal(self):
-        r1 = make_test_result(figure_factory=lambda: "plot_a")
-        r2 = make_test_result(figure_factory=lambda: "plot_b")
+        r1 = make_check_result(figure_factory=lambda: "plot_a")
+        r2 = make_check_result(figure_factory=lambda: "plot_b")
         assert r1 == r2
 
     def test_different_metadata_still_equal(self):
-        r1 = make_test_result(metadata={"col": "age"})
-        r2 = make_test_result(metadata={"col": "income"})
+        r1 = make_check_result(metadata={"col": "age"})
+        r2 = make_check_result(metadata={"col": "income"})
         assert r1 == r2
 
     def test_different_passed_not_equal(self):
-        r1 = make_test_result(passed=True)
-        r2 = make_test_result(passed=False)
+        r1 = make_check_result(passed=True)
+        r2 = make_check_result(passed=False)
         assert r1 != r2
 
 
-class TestTestResultFigureFactory:
+class TestCheckResultFigureFactory:
     def test_render_figure_returns_none_when_no_factory(self):
-        result = make_test_result(figure_factory=None)
+        result = make_check_result(figure_factory=None)
         assert result.render_figure() is None
 
     def test_render_figure_invokes_factory(self):
         sentinel = object()
-        result = make_test_result(figure_factory=lambda: sentinel)
+        result = make_check_result(figure_factory=lambda: sentinel)
         assert result.render_figure() is sentinel
 
     def test_factory_called_each_time(self):
@@ -112,7 +112,7 @@ class TestTestResultFigureFactory:
             call_count["n"] += 1
             return call_count["n"]
 
-        result = make_test_result(figure_factory=factory)
+        result = make_check_result(figure_factory=factory)
         assert result.render_figure() == 1
         assert result.render_figure() == 2
 

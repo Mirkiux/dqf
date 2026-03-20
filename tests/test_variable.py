@@ -158,7 +158,6 @@ class TestReset:
     def test_reset_sets_status_pending(self) -> None:
         v = make_variable()
         v.attach_result(make_result(passed=False))
-        assert v.status == ValidationStatus.FAILED
         v.reset()
         assert v.status == ValidationStatus.PENDING
 

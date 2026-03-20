@@ -10,6 +10,7 @@ from dqf.results import CheckResult, ValidationResult
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_check_result(
     check_name: str = "null_rate_check",
     passed: bool = True,
@@ -37,6 +38,7 @@ def make_check_result(
 # ---------------------------------------------------------------------------
 # CheckResult
 # ---------------------------------------------------------------------------
+
 
 class TestCheckResultConstruction:
     def test_valid_construction(self) -> None:
@@ -132,6 +134,7 @@ class TestCheckResultFigureFactory:
 # ---------------------------------------------------------------------------
 # ValidationResult
 # ---------------------------------------------------------------------------
+
 
 class TestValidationResultConstruction:
     def test_valid_construction(self) -> None:

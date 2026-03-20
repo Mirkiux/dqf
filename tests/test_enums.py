@@ -1,4 +1,3 @@
-
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 
 

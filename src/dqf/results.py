@@ -29,9 +29,7 @@ class CheckResult:
     threshold: Any
     rate: float | None = None
     metadata: dict = field(default_factory=dict, compare=False, hash=False)
-    figure_factory: Callable[[], Any] | None = field(
-        default=None, compare=False, hash=False
-    )
+    figure_factory: Callable[[], Any] | None = field(default=None, compare=False, hash=False)
 
     def __post_init__(self) -> None:
         if not self.check_name:
@@ -41,9 +39,7 @@ class CheckResult:
                 f"population_size must be a positive integer, got {self.population_size}"
             )
         if self.rate is not None and not (0.0 <= self.rate <= 1.0):
-            raise ValueError(
-                f"rate must be between 0.0 and 1.0, got {self.rate}"
-            )
+            raise ValueError(f"rate must be between 0.0 and 1.0, got {self.rate}")
 
     def render_figure(self) -> Any:
         """Invoke the figure_factory and return the resulting Figure.

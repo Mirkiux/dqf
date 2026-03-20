@@ -22,9 +22,11 @@ MANIFEST
 # Virtual environments
 .env
 .venv
+.ruff_venv
 env/
 venv/
 ENV/
+ruff_venv/
 
 # Testing
 .tox/

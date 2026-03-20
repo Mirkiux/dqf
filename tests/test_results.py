@@ -7,6 +7,7 @@ from dqf.results import CheckResult, ValidationResult
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def make_check_result(**overrides) -> CheckResult:
     defaults = dict(
         check_name="null_rate_check",
@@ -24,6 +25,7 @@ def make_check_result(**overrides) -> CheckResult:
 # ---------------------------------------------------------------------------
 # CheckResult
 # ---------------------------------------------------------------------------
+
 
 class TestCheckResultConstruction:
     def test_valid_construction(self):
@@ -119,6 +121,7 @@ class TestCheckResultFigureFactory:
 # ---------------------------------------------------------------------------
 # ValidationResult
 # ---------------------------------------------------------------------------
+
 
 class TestValidationResultConstruction:
     def test_valid_construction(self):

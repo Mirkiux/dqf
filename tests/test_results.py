@@ -3,7 +3,6 @@ import pytest
 from dqf.enums import Severity
 from dqf.results import CheckResult, ValidationResult
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

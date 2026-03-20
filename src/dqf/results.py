@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 from dqf.enums import Severity
 
@@ -26,9 +27,9 @@ class CheckResult:
     observed_value: Any
     population_size: int
     threshold: Any
-    rate: Optional[float] = None
+    rate: float | None = None
     metadata: dict = field(default_factory=dict, compare=False, hash=False)
-    figure_factory: Optional[Callable[[], Any]] = field(
+    figure_factory: Callable[[], Any] | None = field(
         default=None, compare=False, hash=False
     )
 

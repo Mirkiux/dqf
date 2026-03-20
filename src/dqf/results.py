@@ -28,7 +28,7 @@ class CheckResult:
     population_size: int
     threshold: Any
     rate: float | None = None
-    metadata: dict = field(default_factory=dict, compare=False, hash=False)
+    metadata: dict[str, Any] = field(default_factory=dict, compare=False, hash=False)
     figure_factory: Callable[[], Any] | None = field(default=None, compare=False, hash=False)
 
     def __post_init__(self) -> None:
@@ -56,7 +56,7 @@ class ValidationResult:
 
     check_name: str
     passed: bool
-    details: dict = field(default_factory=dict, compare=False, hash=False)
+    details: dict[str, Any] = field(default_factory=dict, compare=False, hash=False)
 
     def __post_init__(self) -> None:
         if not self.check_name:

@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 from dqf.results import CheckResult, ValidationResult
+from dqf.variable import Variable
 
 __all__ = [
     "DataType",
@@ -17,4 +18,5 @@ __all__ = [
     "VariableRole",
     "CheckResult",
     "ValidationResult",
+    "Variable",
 ]

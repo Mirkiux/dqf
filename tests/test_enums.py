@@ -2,7 +2,7 @@ from dqf.enums import DataType, EngineType, Severity, ValidationStatus, Variable
 
 
 class TestDataType:
-    def test_all_members_exist(self):
+    def test_all_members_exist(self) -> None:
         members = {e.value for e in DataType}
         assert members == {
             "numeric_continuous",
@@ -14,29 +14,29 @@ class TestDataType:
             "identifier",
         }
 
-    def test_lookup_by_value(self):
+    def test_lookup_by_value(self) -> None:
         assert DataType("categorical") is DataType.CATEGORICAL
 
 
 class TestValidationStatus:
-    def test_all_members_exist(self):
+    def test_all_members_exist(self) -> None:
         members = {e.value for e in ValidationStatus}
         assert members == {"pending", "passed", "failed", "skipped", "error"}
 
-    def test_lookup_by_value(self):
+    def test_lookup_by_value(self) -> None:
         assert ValidationStatus("failed") is ValidationStatus.FAILED
 
 
 class TestSeverity:
-    def test_all_members_exist(self):
+    def test_all_members_exist(self) -> None:
         assert {e.value for e in Severity} == {"warning", "failure"}
 
-    def test_lookup_by_value(self):
+    def test_lookup_by_value(self) -> None:
         assert Severity("warning") is Severity.WARNING
 
 
 class TestEngineType:
-    def test_all_members_exist(self):
+    def test_all_members_exist(self) -> None:
         assert {e.value for e in EngineType} == {
             "sqlalchemy",
             "databricks",
@@ -46,7 +46,7 @@ class TestEngineType:
 
 
 class TestVariableRole:
-    def test_all_members_exist(self):
+    def test_all_members_exist(self) -> None:
         assert {e.value for e in VariableRole} == {
             "feature",
             "target",
@@ -54,5 +54,5 @@ class TestVariableRole:
             "auxiliary",
         }
 
-    def test_target_member(self):
+    def test_target_member(self) -> None:
         assert VariableRole("target") is VariableRole.TARGET

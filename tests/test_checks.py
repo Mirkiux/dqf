@@ -7,8 +7,11 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from dqf.adapters.mock_adapter import MockAdapter
 from dqf.checks.base import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck
 from dqf.checks.pipeline import CheckPipeline
+from dqf.datasets.universe import UniverseDataset
+from dqf.datasets.variables import VariablesDataset
 from dqf.enums import DataType, Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -32,7 +35,7 @@ class FakeCheck(BaseCrossSectionalCheck):
         self._severity = severity
         self._passed = passed
         self._params = params or {}
-        self.calibrate_calls: list[pd.DataFrame] = []
+        self.calibrate_calls: list[Any] = []
 
     @property
     def name(self) -> str:
@@ -46,16 +49,17 @@ class FakeCheck(BaseCrossSectionalCheck):
     def params(self) -> dict[str, Any]:
         return self._params
 
-    def calibrate(self, reference_data: pd.DataFrame) -> None:
-        self.calibrate_calls.append(reference_data)
+    def calibrate(self, dataset: VariablesDataset) -> None:
+        self.calibrate_calls.append(dataset)
 
-    def check(self, data: pd.DataFrame, variable: Variable) -> CheckResult:
+    def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
+        population_size = len(dataset.universe.materialise())
         return CheckResult(
             check_name=self._name,
             passed=self._passed,
             severity=self._severity,
             observed_value=0,
-            population_size=len(data) if len(data) > 0 else 1,
+            population_size=population_size if population_size > 0 else 1,
             threshold=None,
         )
 
@@ -78,7 +82,7 @@ class FakeLongitudinalCheck(BaseLongitudinalCheck):
     def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
         return f"SELECT {time_field}, AVG({variable_name}) FROM t GROUP BY {time_field}"
 
-    def check(self, data: pd.DataFrame, variable: Variable) -> CheckResult:
+    def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
         return CheckResult(
             check_name=self._name,
             passed=self._passed,
@@ -93,8 +97,25 @@ def make_variable() -> Variable:
     return Variable(name="x", dtype=DataType.NUMERIC_CONTINUOUS)
 
 
-def make_df(n: int = 3) -> pd.DataFrame:
-    return pd.DataFrame({"x": range(n)})
+_UNIVERSE_SQL = "SELECT * FROM universe"
+_VARIABLES_SQL = "SELECT * FROM variables"
+
+
+def make_dataset(n: int = 3) -> VariablesDataset:
+    universe_df = pd.DataFrame({"_uid": range(n)})
+    variables_df = pd.DataFrame({"_uid": range(n), "x": range(n)})
+    universe = UniverseDataset(
+        sql=_UNIVERSE_SQL,
+        primary_key=["_uid"],
+        adapter=MockAdapter({_UNIVERSE_SQL: universe_df}),
+    )
+    return VariablesDataset(
+        sql=_VARIABLES_SQL,
+        primary_key=["_uid"],
+        universe=universe,
+        join_keys={"_uid": "_uid"},
+        adapter=MockAdapter({_VARIABLES_SQL: variables_df}),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -124,7 +145,7 @@ class TestBaseCheckAbstract:
 class TestBaseCheckInterface:
     def test_calibrate_default_is_noop(self) -> None:
         check = FakeCheck("c")
-        check.calibrate(make_df())  # must not raise
+        check.calibrate(make_dataset())  # must not raise
 
     def test_params_default_is_empty_dict(self) -> None:
         check = FakeCheck("c")
@@ -160,12 +181,12 @@ class TestBaseLongitudinalCheckInterface:
 class TestCheckPipelineRun:
     def test_empty_pipeline_returns_empty_list(self) -> None:
         pipeline = CheckPipeline([])
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert results == []
 
     def test_single_step_result_collected(self) -> None:
         pipeline = CheckPipeline([("c1", FakeCheck("c1", passed=True))])
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 1
         assert results[0].passed is True
 
@@ -173,12 +194,12 @@ class TestCheckPipelineRun:
         pipeline = CheckPipeline(
             [("c1", FakeCheck("c1", passed=True)), ("c2", FakeCheck("c2", passed=True))]
         )
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 2
 
     def test_results_order_matches_steps_order(self) -> None:
         pipeline = CheckPipeline([("first", FakeCheck("first")), ("second", FakeCheck("second"))])
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert results[0].check_name == "first"
         assert results[1].check_name == "second"
 
@@ -187,7 +208,7 @@ class TestCheckPipelineRun:
             ("c", FakeCheck(f"c{i}", passed=True)) for i in range(5)
         ]
         pipeline = CheckPipeline(steps)
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 5
 
 
@@ -205,7 +226,7 @@ class TestCheckPipelineStopOnFailure:
             ],
             stop_on_failure=False,
         )
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 2
 
     def test_stop_on_failure_true_halts_after_failure(self) -> None:
@@ -216,7 +237,7 @@ class TestCheckPipelineStopOnFailure:
             ],
             stop_on_failure=True,
         )
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 1
         assert results[0].check_name == "fail"
 
@@ -228,7 +249,7 @@ class TestCheckPipelineStopOnFailure:
             ],
             stop_on_failure=True,
         )
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 2
 
     def test_passing_failure_severity_does_not_stop(self) -> None:
@@ -239,7 +260,7 @@ class TestCheckPipelineStopOnFailure:
             ],
             stop_on_failure=True,
         )
-        results = pipeline.run(make_df(), make_variable())
+        results = pipeline.run(make_dataset(), make_variable())
         assert len(results) == 2
 
 
@@ -253,16 +274,16 @@ class TestCheckPipelineCalibrate:
         c1 = FakeCheck("c1")
         c2 = FakeCheck("c2")
         pipeline = CheckPipeline([("c1", c1), ("c2", c2)])
-        pipeline.calibrate(make_df())
+        pipeline.calibrate(make_dataset())
         assert len(c1.calibrate_calls) == 1
         assert len(c2.calibrate_calls) == 1
 
-    def test_calibrate_passes_same_dataframe(self) -> None:
+    def test_calibrate_passes_same_dataset(self) -> None:
         c1 = FakeCheck("c1")
-        df = make_df()
+        dataset = make_dataset()
         pipeline = CheckPipeline([("c1", c1)])
-        pipeline.calibrate(df)
-        assert c1.calibrate_calls[0] is df
+        pipeline.calibrate(dataset)
+        assert c1.calibrate_calls[0] is dataset
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +299,7 @@ class TestCheckPipelineComposite:
     def test_nested_pipeline_as_step(self) -> None:
         inner = CheckPipeline([("inner_c", FakeCheck("inner_c", passed=True))])
         outer = CheckPipeline([("inner", inner), ("outer_c", FakeCheck("outer_c", passed=True))])
-        results = outer.run(make_df(), make_variable())
+        results = outer.run(make_dataset(), make_variable())
         # outer_c result + inner's aggregated result
         assert len(results) == 2
 
@@ -292,6 +313,6 @@ class TestCheckPipelineComposite:
             [("inner", inner), ("outer_after", FakeCheck("outer_after", passed=True))],
             stop_on_failure=True,
         )
-        results = outer.run(make_df(), make_variable())
+        results = outer.run(make_dataset(), make_variable())
         assert len(results) == 1
         assert results[0].check_name == "pipeline"

@@ -124,8 +124,7 @@ class TestBaseCheckAbstract:
 class TestBaseCheckInterface:
     def test_calibrate_default_is_noop(self) -> None:
         check = FakeCheck("c")
-        result = check.calibrate(make_df())
-        assert result is None
+        check.calibrate(make_df())  # must not raise
 
     def test_params_default_is_empty_dict(self) -> None:
         check = FakeCheck("c")
@@ -184,7 +183,9 @@ class TestCheckPipelineRun:
         assert results[1].check_name == "second"
 
     def test_all_results_returned_when_no_failure(self) -> None:
-        steps = [("c", FakeCheck(f"c{i}", passed=True)) for i in range(5)]
+        steps: list[tuple[str, BaseCheck]] = [
+            ("c", FakeCheck(f"c{i}", passed=True)) for i in range(5)
+        ]
         pipeline = CheckPipeline(steps)
         results = pipeline.run(make_df(), make_variable())
         assert len(results) == 5

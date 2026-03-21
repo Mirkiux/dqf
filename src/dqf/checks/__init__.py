@@ -1,1 +1,9 @@
-# Plans 6, 10, 11: Checks subsystem — public exports
+from dqf.checks.base import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck
+from dqf.checks.pipeline import CheckPipeline
+
+__all__ = [
+    "BaseCheck",
+    "BaseCrossSectionalCheck",
+    "BaseLongitudinalCheck",
+    "CheckPipeline",
+]

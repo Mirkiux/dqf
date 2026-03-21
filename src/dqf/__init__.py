@@ -13,11 +13,16 @@ from dqf.adapters import (
     SparkAdapter,
     SQLAlchemyAdapter,
 )
+from dqf.checks import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck, CheckPipeline
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 from dqf.results import CheckResult, ValidationResult
 from dqf.variable import Variable
 
 __all__ = [
+    "BaseCheck",
+    "BaseCrossSectionalCheck",
+    "BaseLongitudinalCheck",
+    "CheckPipeline",
     "DataSourceAdapter",
     "DatabricksAdapter",
     "MockAdapter",

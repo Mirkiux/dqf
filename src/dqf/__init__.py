@@ -15,6 +15,7 @@ from dqf.adapters import (
 )
 from dqf.checks import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck, CheckPipeline
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
+from dqf.resolver import CheckSuiteResolver
 from dqf.results import CheckResult, ValidationResult
 from dqf.variable import Variable
 
@@ -23,6 +24,7 @@ __all__ = [
     "BaseCrossSectionalCheck",
     "BaseLongitudinalCheck",
     "CheckPipeline",
+    "CheckSuiteResolver",
     "DataSourceAdapter",
     "DatabricksAdapter",
     "MockAdapter",

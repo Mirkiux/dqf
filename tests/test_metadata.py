@@ -249,6 +249,13 @@ class TestSemanticTypeInferenceBuilder:
         result = self.builder.profile(series, v)
         assert result["semantic_dtype"] == DT.TEXT
 
+    def test_custom_low_cardinality_threshold(self) -> None:
+        builder = SemanticTypeInferenceBuilder(low_cardinality_threshold=2)
+        v = make_variable()
+        # 3 unique values exceeds threshold of 2 → TEXT
+        result = builder.profile(pd.Series(["cat", "dog", "bird"]), v)
+        assert result["semantic_dtype"] == DT.TEXT
+
     def test_updates_variable_metadata(self) -> None:
         v = make_variable()
         self.builder.profile(pd.Series([1, 2, 3]), v)

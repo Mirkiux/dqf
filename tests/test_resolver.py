@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import pandas as pd
 import pytest
 
+from dqf.adapters.mock_adapter import MockAdapter
 from dqf.checks.pipeline import CheckPipeline
+from dqf.datasets.universe import UniverseDataset
+from dqf.datasets.variables import VariablesDataset
 from dqf.enums import DataType
 from dqf.resolver import CheckSuiteResolver
 from dqf.variable import Variable
@@ -12,6 +16,33 @@ from dqf.variable import Variable
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+_UNIVERSE_SQL = "SELECT * FROM universe"
+_VARIABLES_SQL = "SELECT * FROM variables"
+
+
+def make_resolver_dataset(*variables: Variable) -> VariablesDataset:
+    """Minimal VariablesDataset pre-populated with *variables*."""
+    n = max(1, len(variables))
+    cols = {v.name: [0] * n for v in variables}
+    universe_df = pd.DataFrame({"_uid": range(n)})
+    variables_df = (
+        pd.DataFrame({"_uid": range(n), **cols}) if variables else pd.DataFrame({"_uid": range(n)})
+    )
+    universe = UniverseDataset(
+        sql=_UNIVERSE_SQL,
+        primary_key=["_uid"],
+        adapter=MockAdapter({_UNIVERSE_SQL: universe_df}),
+    )
+    ds = VariablesDataset(
+        sql=_VARIABLES_SQL,
+        primary_key=["_uid"],
+        universe=universe,
+        join_keys={"_uid": "_uid"},
+        adapter=MockAdapter({_VARIABLES_SQL: variables_df}),
+    )
+    ds.variables = list(variables)
+    return ds
 
 
 def make_variable(name: str = "x", **kwargs: object) -> Variable:
@@ -113,16 +144,16 @@ class TestCheckSuiteResolverPriority:
 
 
 class TestCheckSuiteResolverResolveAll:
-    def test_resolve_all_empty_list(self) -> None:
+    def test_resolve_all_empty_variables(self) -> None:
         r = CheckSuiteResolver()
         r.register(always_true, lambda: make_pipeline())
-        assert r.resolve_all([]) == {}
+        assert r.resolve_all(make_resolver_dataset()) == {}
 
     def test_resolve_all_single_variable(self) -> None:
         r = CheckSuiteResolver()
         r.register(always_true, lambda: make_pipeline())
         v = make_variable("score")
-        result = r.resolve_all([v])
+        result = r.resolve_all(make_resolver_dataset(v))
         assert "score" in result
         assert isinstance(result["score"], CheckPipeline)
 
@@ -130,14 +161,14 @@ class TestCheckSuiteResolverResolveAll:
         r = CheckSuiteResolver()
         r.register(always_true, lambda: make_pipeline())
         variables = [make_variable(f"v{i}") for i in range(3)]
-        result = r.resolve_all(variables)
+        result = r.resolve_all(make_resolver_dataset(*variables))
         assert len(result) == 3
 
     def test_resolve_all_keys_are_variable_names(self) -> None:
         r = CheckSuiteResolver()
         r.register(always_true, lambda: make_pipeline())
         variables = [make_variable("alpha"), make_variable("beta"), make_variable("gamma")]
-        result = r.resolve_all(variables)
+        result = r.resolve_all(make_resolver_dataset(*variables))
         assert set(result.keys()) == {"alpha", "beta", "gamma"}
 
     def test_resolve_all_raises_if_any_variable_unmatched(self) -> None:
@@ -146,7 +177,7 @@ class TestCheckSuiteResolverResolveAll:
         r.register(lambda v: v.name == "known", lambda: make_pipeline())
         variables = [make_variable("known"), make_variable("unknown")]
         with pytest.raises(ValueError, match="unknown"):
-            r.resolve_all(variables)
+            r.resolve_all(make_resolver_dataset(*variables))
 
 
 # ---------------------------------------------------------------------------

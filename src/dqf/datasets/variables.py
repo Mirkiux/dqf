@@ -216,7 +216,7 @@ class VariablesDataset:
             if col == _VD_MATCHED:
                 continue
             v = Variable(name=col, dtype=DataType.TEXT)
-            builder_pipeline.profile(data[col], v)
+            builder_pipeline.profile(self, v)
             resolved.append(v)
         self.variables = resolved
         return resolved

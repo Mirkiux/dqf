@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 
 class BaseMetadataBuilder(ABC):
     """Abstract base for all metadata builders.
 
-    Each builder inspects a ``pd.Series`` and returns a flat dict of
-    key/value pairs to be merged into ``Variable.metadata``.
+    Each builder inspects a :class:`~dqf.datasets.variables.VariablesDataset`
+    and returns a flat dict of key/value pairs to be merged into
+    ``Variable.metadata``.
     """
 
     @property
@@ -21,8 +23,8 @@ class BaseMetadataBuilder(ABC):
         """Short identifier for this builder."""
 
     @abstractmethod
-    def profile(self, series: pd.Series, variable: Variable) -> dict[str, Any]:
-        """Profile *series* and return a flat metadata dict.
+    def profile(self, dataset: VariablesDataset, variable: Variable) -> dict[str, Any]:
+        """Profile *dataset* for *variable* and return a flat metadata dict.
 
         Implementations must also update ``variable.metadata`` in-place.
         """
@@ -43,10 +45,10 @@ class MetadataBuilderPipeline(BaseMetadataBuilder):
     def name(self) -> str:
         return "pipeline"
 
-    def profile(self, series: pd.Series, variable: Variable) -> dict[str, Any]:
+    def profile(self, dataset: VariablesDataset, variable: Variable) -> dict[str, Any]:
         merged: dict[str, Any] = {}
         for _, builder in self._steps:
-            result = builder.profile(series, variable)
+            result = builder.profile(dataset, variable)
             merged.update(result)
         variable.metadata.update(merged)
         return merged

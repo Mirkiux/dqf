@@ -14,6 +14,7 @@ from dqf.adapters import (
     SQLAlchemyAdapter,
 )
 from dqf.checks import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck, CheckPipeline
+from dqf.datasets import UniverseDataset, VariablesDataset
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 from dqf.resolver import CheckSuiteResolver
 from dqf.results import CheckResult, ValidationResult
@@ -25,6 +26,8 @@ __all__ = [
     "BaseLongitudinalCheck",
     "CheckPipeline",
     "CheckSuiteResolver",
+    "UniverseDataset",
+    "VariablesDataset",
     "DataSourceAdapter",
     "DatabricksAdapter",
     "MockAdapter",

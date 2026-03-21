@@ -74,6 +74,16 @@ class VariablesDataset:
     # Materialisation
     # ------------------------------------------------------------------
 
+    def _fetch_raw_variables(self, force: bool = False) -> pd.DataFrame:
+        """Execute the variables query and return the cached raw DataFrame.
+
+        Called by :meth:`materialise` and :meth:`validate_join_integrity` so
+        that raw variables data is available independently of the full join.
+        """
+        if force or self._raw_variables_data is None:
+            self._raw_variables_data = self.adapter.execute(self.sql)
+        return self._raw_variables_data
+
     def materialise(self, force: bool = False) -> pd.DataFrame:
         """Materialise both datasets and return a cached universe-anchored left join.
 
@@ -94,46 +104,41 @@ class VariablesDataset:
             ``__vd_matched__``, which would be silently overwritten.
         """
         if force or self._data is None:
-            self._data = self._materialise()
+            universe_df = self.universe.materialise(force=force)
+            variables_df = self._fetch_raw_variables(force=force)
+
+            # Guard: framework column must not already exist in either source
+            for col, source in ((_VD_MATCHED, "universe"), (_VD_MATCHED, "variables")):
+                df = universe_df if source == "universe" else variables_df
+                if col in df.columns:
+                    raise ValueError(
+                        f"Input {source} dataset already contains the framework-reserved "
+                        f"column '{col}'. Rename it before passing to VariablesDataset."
+                    )
+
+            # Build merge key lists: universe columns (left_on) and variables columns (right_on)
+            left_on = list(self.join_keys.values())  # universe columns
+            right_on = list(self.join_keys.keys())  # variables columns
+
+            # Use a dedicated indicator column name to avoid collisions with user data
+            merged = universe_df.merge(
+                variables_df,
+                how="left",
+                left_on=left_on,
+                right_on=right_on,
+                indicator=_MERGE_INDICATOR,
+            )
+            merged[_VD_MATCHED] = merged[_MERGE_INDICATOR] == "both"
+            merged = merged.drop(columns=[_MERGE_INDICATOR])
+
+            # Drop duplicate join key columns introduced by the merge when keys differ
+            for var_col, uni_col in self.join_keys.items():
+                if var_col != uni_col and var_col in merged.columns:
+                    merged = merged.drop(columns=[var_col])
+
+            self._data = merged
+
         return self._data
-
-    def _materialise(self) -> pd.DataFrame:
-        universe_df = self.universe.materialise()
-        variables_df = self.adapter.execute(self.sql)
-
-        # Store raw variables data before any operation that might fail
-        self._raw_variables_data = variables_df
-
-        # Guard: framework column must not already exist in either source
-        for col, source in ((_VD_MATCHED, "universe"), (_VD_MATCHED, "variables")):
-            df = universe_df if source == "universe" else variables_df
-            if col in df.columns:
-                raise ValueError(
-                    f"Input {source} dataset already contains the framework-reserved "
-                    f"column '{col}'. Rename it before passing to VariablesDataset."
-                )
-
-        # Build merge key lists: universe columns (left_on) and variables columns (right_on)
-        left_on = list(self.join_keys.values())  # universe columns
-        right_on = list(self.join_keys.keys())  # variables columns
-
-        # Use a dedicated indicator column name to avoid collisions with user data
-        merged = universe_df.merge(
-            variables_df,
-            how="left",
-            left_on=left_on,
-            right_on=right_on,
-            indicator=_MERGE_INDICATOR,
-        )
-        merged[_VD_MATCHED] = merged[_MERGE_INDICATOR] == "both"
-        merged = merged.drop(columns=[_MERGE_INDICATOR])
-
-        # Drop duplicate join key columns introduced by the merge when keys differ
-        for var_col, uni_col in self.join_keys.items():
-            if var_col != uni_col and var_col in merged.columns:
-                merged = merged.drop(columns=[var_col])
-
-        return merged
 
     # ------------------------------------------------------------------
     # Validation helpers
@@ -163,12 +168,9 @@ class VariablesDataset:
         check — this matches SQL semantics where ``NULL != NULL`` and multiple
         null-key rows do not create a join fan-out.
         """
-        # Fetch raw variables data without running the full join so that
+        # Use the raw variables data without running the full join so that
         # missing-key errors are reported as validation failures, not exceptions.
-        if self._raw_variables_data is None:
-            self._raw_variables_data = self.adapter.execute(self.sql)
-        variables_data = self._raw_variables_data
-
+        variables_data = self._fetch_raw_variables()
         join_cols = list(self.join_keys.keys())
 
         # Fail fast if any required join keys are missing

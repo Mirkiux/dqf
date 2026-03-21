@@ -84,6 +84,12 @@ class TestUniverseDataset:
         result = u.validate_pk_uniqueness(_UNIVERSE_DF)
         assert result.check_name == "pk_uniqueness"
 
+    def test_validate_pk_uniqueness_stores_result_on_self(self) -> None:
+        u = make_universe()
+        assert u.pk_validation is None
+        result = u.validate_pk_uniqueness(_UNIVERSE_DF)
+        assert u.pk_validation is result
+
     def test_time_field_default_is_none(self) -> None:
         u = make_universe()
         assert u.time_field is None
@@ -151,6 +157,12 @@ class TestVariablesDatasetValidation:
         result = vd.validate_pk_uniqueness(dup)
         assert result.passed is False
 
+    def test_validate_pk_uniqueness_stores_result_on_self(self) -> None:
+        vd = make_variables()
+        assert vd.pk_validation is None
+        result = vd.validate_pk_uniqueness(_VARIABLES_DF)
+        assert vd.pk_validation is result
+
     def test_validate_join_integrity_passes_when_no_fanout(self) -> None:
         vd = make_variables()
         result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
@@ -166,6 +178,12 @@ class TestVariablesDatasetValidation:
         vd = make_variables()
         result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
         assert result.check_name == "join_integrity"
+
+    def test_validate_join_integrity_stores_result_on_self(self) -> None:
+        vd = make_variables()
+        assert vd.join_validation is None
+        result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
+        assert vd.join_validation is result
 
 
 # ---------------------------------------------------------------------------

@@ -44,6 +44,7 @@ class UniverseDataset:
         self.adapter = adapter
         self.time_field = time_field
         self._data: pd.DataFrame | None = None
+        self.pk_validation: ValidationResult | None = None
 
     def to_pandas(self) -> pd.DataFrame:
         """Execute the universe query and return the cached DataFrame.
@@ -58,8 +59,9 @@ class UniverseDataset:
     def validate_pk_uniqueness(self, data: pd.DataFrame) -> ValidationResult:
         """Check that *primary_key* columns form a unique key in *data*."""
         has_duplicates = data.duplicated(subset=self.primary_key).any()
-        return ValidationResult(
+        self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,
             passed=not bool(has_duplicates),
             details={"primary_key": self.primary_key},
         )
+        return self.pk_validation

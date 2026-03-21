@@ -66,6 +66,8 @@ class VariablesDataset:
         self.adapter = adapter
         self.variables: list[Variable] = variables if variables is not None else []
         self._data: pd.DataFrame | None = None
+        self.pk_validation: ValidationResult | None = None
+        self.join_validation: ValidationResult | None = None
 
     # ------------------------------------------------------------------
     # Materialisation
@@ -130,11 +132,12 @@ class VariablesDataset:
     def validate_pk_uniqueness(self, data: pd.DataFrame) -> ValidationResult:
         """Check that *primary_key* columns form a unique key in *data*."""
         has_duplicates = data.duplicated(subset=self.primary_key).any()
-        return ValidationResult(
+        self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,
             passed=not bool(has_duplicates),
             details={"primary_key": self.primary_key},
         )
+        return self.pk_validation
 
     def validate_join_integrity(
         self,
@@ -158,22 +161,24 @@ class VariablesDataset:
         # Fail fast if any required join keys are missing
         missing = [c for c in join_cols if c not in variables_data.columns]
         if missing:
-            return ValidationResult(
+            self.join_validation = ValidationResult(
                 check_name=_JOIN_CHECK,
                 passed=False,
                 details={"join_keys": self.join_keys, "missing_join_keys": missing},
             )
+            return self.join_validation
 
         # Exclude rows with nulls in any join key (SQL NULL semantics)
         non_null_mask = variables_data[join_cols].notna().all(axis=1)
         non_null_rows = variables_data[non_null_mask]
         has_fanout = bool(non_null_rows.duplicated(subset=join_cols).any())
 
-        return ValidationResult(
+        self.join_validation = ValidationResult(
             check_name=_JOIN_CHECK,
             passed=not has_fanout,
             details={"join_keys": self.join_keys},
         )
+        return self.join_validation
 
     # ------------------------------------------------------------------
     # Variable resolution

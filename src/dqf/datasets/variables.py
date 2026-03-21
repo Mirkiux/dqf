@@ -18,14 +18,14 @@ _JOIN_CHECK = "join_integrity"
 class VariablesDataset:
     """The dataset that carries the variable values to be validated.
 
-    :meth:`to_pandas` performs a LEFT JOIN from the universe to the variables
+    :meth:`materialise` performs a LEFT JOIN from the universe to the variables
     data, preserving all universe entities, and appends the framework-managed
     column ``__vd_matched__``.  This distinguishes structural nulls (entity
     absent from the variables dataset) from value nulls (entity present but
     column is null).
 
-    The materialized DataFrame is cached on first call so the dataset is a
-    rich stateful object that can be passed to metadata builders, check
+    The materialised DataFrame is cached after the first call so the dataset is
+    a rich stateful object that can be passed to metadata builders, check
     pipelines, and validation helpers without re-executing the queries.
 
     SQL is executed in the native engine via each dataset's own adapter —
@@ -66,6 +66,7 @@ class VariablesDataset:
         self.adapter = adapter
         self.variables: list[Variable] = variables if variables is not None else []
         self._data: pd.DataFrame | None = None
+        self._raw_variables_data: pd.DataFrame | None = None
         self.pk_validation: ValidationResult | None = None
         self.join_validation: ValidationResult | None = None
 
@@ -73,12 +74,18 @@ class VariablesDataset:
     # Materialisation
     # ------------------------------------------------------------------
 
-    def to_pandas(self) -> pd.DataFrame:
+    def materialise(self, force: bool = False) -> pd.DataFrame:
         """Materialise both datasets and return a cached universe-anchored left join.
 
         The result always contains every universe row.  The boolean column
         ``__vd_matched__`` is ``True`` where the universe entity was found in
         the variables dataset and ``False`` for structural absences.
+
+        Parameters
+        ----------
+        force:
+            When ``True`` both queries are re-executed and the cache is refreshed
+            even if data was previously materialised.
 
         Raises
         ------
@@ -86,13 +93,16 @@ class VariablesDataset:
             If the input datasets already contain a column named
             ``__vd_matched__``, which would be silently overwritten.
         """
-        if self._data is None:
+        if force or self._data is None:
             self._data = self._materialise()
         return self._data
 
     def _materialise(self) -> pd.DataFrame:
-        universe_df = self.universe.to_pandas()
+        universe_df = self.universe.materialise()
         variables_df = self.adapter.execute(self.sql)
+
+        # Store raw variables data before any operation that might fail
+        self._raw_variables_data = variables_df
 
         # Guard: framework column must not already exist in either source
         for col, source in ((_VD_MATCHED, "universe"), (_VD_MATCHED, "variables")):
@@ -129,8 +139,9 @@ class VariablesDataset:
     # Validation helpers
     # ------------------------------------------------------------------
 
-    def validate_pk_uniqueness(self, data: pd.DataFrame) -> ValidationResult:
-        """Check that *primary_key* columns form a unique key in *data*."""
+    def validate_pk_uniqueness(self) -> ValidationResult:
+        """Check that *primary_key* columns form a unique key in the materialised data."""
+        data = self.materialise()
         has_duplicates = data.duplicated(subset=self.primary_key).any()
         self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,
@@ -139,23 +150,25 @@ class VariablesDataset:
         )
         return self.pk_validation
 
-    def validate_join_integrity(
-        self,
-        variables_data: pd.DataFrame,
-        universe_data: pd.DataFrame,
-    ) -> ValidationResult:
-        """Check that join keys in *variables_data* are unique (no fan-out).
+    def validate_join_integrity(self) -> ValidationResult:
+        """Check that join keys in the variables dataset are unique (no fan-out).
 
         Fan-out occurs when a single universe entity matches multiple rows in
         the variables dataset, inflating result counts.
 
         Fails immediately with a descriptive message if any required join key
-        column is missing from *variables_data*.
+        column is missing from the variables dataset.
 
         Null values in join key columns are excluded before the uniqueness
         check — this matches SQL semantics where ``NULL != NULL`` and multiple
         null-key rows do not create a join fan-out.
         """
+        # Fetch raw variables data without running the full join so that
+        # missing-key errors are reported as validation failures, not exceptions.
+        if self._raw_variables_data is None:
+            self._raw_variables_data = self.adapter.execute(self.sql)
+        variables_data = self._raw_variables_data
+
         join_cols = list(self.join_keys.keys())
 
         # Fail fast if any required join keys are missing
@@ -186,7 +199,6 @@ class VariablesDataset:
 
     def resolve_variables(
         self,
-        data: pd.DataFrame,
         builder_pipeline: MetadataBuilderPipeline,
     ) -> list[Variable]:
         """Create and profile one :class:`~dqf.variable.Variable` per data column.
@@ -196,6 +208,7 @@ class VariablesDataset:
 
         The resolved list is also stored on ``self.variables``.
         """
+        data = self.materialise()
         resolved: list[Variable] = []
         for col in data.columns:
             if col == _VD_MATCHED:

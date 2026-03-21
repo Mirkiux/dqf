@@ -16,9 +16,9 @@ class UniverseDataset:
 
     SQL is executed in the native engine via *adapter* — Oracle runs on Oracle,
     Databricks on Databricks.  Only the result set crosses into pandas, keeping
-    all check logic engine-agnostic.  The materialized DataFrame is cached on
-    first call to :meth:`to_pandas` so the dataset can be passed around as a
-    rich stateful object without re-querying the engine.
+    all check logic engine-agnostic.  The materialised DataFrame is cached after
+    the first call to :meth:`materialise` so the dataset can be passed around as
+    a rich stateful object without re-querying the engine.
 
     Parameters
     ----------
@@ -46,18 +46,30 @@ class UniverseDataset:
         self._data: pd.DataFrame | None = None
         self.pk_validation: ValidationResult | None = None
 
-    def to_pandas(self) -> pd.DataFrame:
+    # ------------------------------------------------------------------
+    # Materialisation
+    # ------------------------------------------------------------------
+
+    def materialise(self, force: bool = False) -> pd.DataFrame:
         """Execute the universe query and return the cached DataFrame.
 
-        The query is executed once and the result cached.  Subsequent calls
-        return the same object without hitting the engine again.
+        Parameters
+        ----------
+        force:
+            When ``True`` the query is re-executed and the cache is refreshed
+            even if data was previously materialised.
         """
-        if self._data is None:
+        if force or self._data is None:
             self._data = self.adapter.execute(self.sql)
         return self._data
 
-    def validate_pk_uniqueness(self, data: pd.DataFrame) -> ValidationResult:
-        """Check that *primary_key* columns form a unique key in *data*."""
+    # ------------------------------------------------------------------
+    # Validation helpers
+    # ------------------------------------------------------------------
+
+    def validate_pk_uniqueness(self) -> ValidationResult:
+        """Check that *primary_key* columns form a unique key in the materialised data."""
+        data = self.materialise()
         has_duplicates = data.duplicated(subset=self.primary_key).any()
         self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,

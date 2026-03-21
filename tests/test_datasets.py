@@ -58,36 +58,36 @@ def make_pipeline() -> MetadataBuilderPipeline:
 
 
 class TestUniverseDataset:
-    def test_to_pandas_delegates_to_adapter(self) -> None:
+    def test_materialise_delegates_to_adapter(self) -> None:
         u = make_universe()
-        result = u.to_pandas()
+        result = u.materialise()
         assert result.equals(_UNIVERSE_DF)
 
-    def test_to_pandas_returns_correct_shape(self) -> None:
+    def test_materialise_returns_correct_shape(self) -> None:
         u = make_universe()
-        result = u.to_pandas()
+        result = u.materialise()
         assert result.shape == (3, 1)
 
     def test_validate_pk_uniqueness_passes_for_unique_keys(self) -> None:
         u = make_universe()
-        result = u.validate_pk_uniqueness(_UNIVERSE_DF)
+        result = u.validate_pk_uniqueness()
         assert result.passed is True
 
     def test_validate_pk_uniqueness_fails_for_duplicate_keys(self) -> None:
-        u = make_universe()
         dup_df = pd.DataFrame({"entity_id": [1, 1, 2]})
-        result = u.validate_pk_uniqueness(dup_df)
+        u = make_universe(extra_rows=dup_df)
+        result = u.validate_pk_uniqueness()
         assert result.passed is False
 
     def test_validate_pk_uniqueness_check_name(self) -> None:
         u = make_universe()
-        result = u.validate_pk_uniqueness(_UNIVERSE_DF)
+        result = u.validate_pk_uniqueness()
         assert result.check_name == "pk_uniqueness"
 
     def test_validate_pk_uniqueness_stores_result_on_self(self) -> None:
         u = make_universe()
         assert u.pk_validation is None
-        result = u.validate_pk_uniqueness(_UNIVERSE_DF)
+        result = u.validate_pk_uniqueness()
         assert u.pk_validation is result
 
     def test_time_field_default_is_none(self) -> None:
@@ -106,34 +106,34 @@ class TestUniverseDataset:
 
 
 # ---------------------------------------------------------------------------
-# TestVariablesDatasetToPandas
+# TestVariablesDatasetMaterialise
 # ---------------------------------------------------------------------------
 
 
-class TestVariablesDatasetToPandas:
+class TestVariablesDatasetMaterialise:
     def setup_method(self) -> None:
         self.vd = make_variables()
-        self.result = self.vd.to_pandas()
+        self.result = self.vd.materialise()
 
-    def test_to_pandas_contains_vd_matched_column(self) -> None:
+    def test_materialise_contains_vd_matched_column(self) -> None:
         assert "__vd_matched__" in self.result.columns
 
-    def test_to_pandas_universe_rows_all_present(self) -> None:
+    def test_materialise_universe_rows_all_present(self) -> None:
         assert len(self.result) == 3
 
-    def test_to_pandas_matched_flag_true_for_joined_rows(self) -> None:
+    def test_materialise_matched_flag_true_for_joined_rows(self) -> None:
         matched = self.result[self.result["entity_id"].isin([1, 2])]
         assert matched["__vd_matched__"].all()
 
-    def test_to_pandas_matched_flag_false_for_unmatched_rows(self) -> None:
+    def test_materialise_matched_flag_false_for_unmatched_rows(self) -> None:
         unmatched = self.result[self.result["entity_id"] == 3]
         assert (~unmatched["__vd_matched__"]).all()
 
-    def test_to_pandas_structural_nulls_in_unmatched_rows(self) -> None:
+    def test_materialise_structural_nulls_in_unmatched_rows(self) -> None:
         unmatched = self.result[self.result["entity_id"] == 3]
         assert unmatched["score"].isna().all()
 
-    def test_to_pandas_value_columns_correct_for_matched_rows(self) -> None:
+    def test_materialise_value_columns_correct_for_matched_rows(self) -> None:
         row1 = self.result[self.result["entity_id"] == 1].iloc[0]
         assert row1["score"] == 0.9
         row2 = self.result[self.result["entity_id"] == 2].iloc[0]
@@ -148,41 +148,41 @@ class TestVariablesDatasetToPandas:
 class TestVariablesDatasetValidation:
     def test_validate_pk_uniqueness_passes(self) -> None:
         vd = make_variables()
-        result = vd.validate_pk_uniqueness(_VARIABLES_DF)
+        result = vd.validate_pk_uniqueness()
         assert result.passed is True
 
-    def test_validate_pk_uniqueness_fails(self) -> None:
-        vd = make_variables()
-        dup = pd.DataFrame({"entity_id": [1, 1], "score": [0.9, 0.8]})
-        result = vd.validate_pk_uniqueness(dup)
+    def test_validate_pk_uniqueness_fails_when_fanout_in_materialised_data(self) -> None:
+        fanout = pd.DataFrame({"entity_id": [1, 1, 2], "score": [0.9, 0.7, 0.4]})
+        vd = make_variables(variables_df=fanout)
+        result = vd.validate_pk_uniqueness()
         assert result.passed is False
 
     def test_validate_pk_uniqueness_stores_result_on_self(self) -> None:
         vd = make_variables()
         assert vd.pk_validation is None
-        result = vd.validate_pk_uniqueness(_VARIABLES_DF)
+        result = vd.validate_pk_uniqueness()
         assert vd.pk_validation is result
 
     def test_validate_join_integrity_passes_when_no_fanout(self) -> None:
         vd = make_variables()
-        result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
+        result = vd.validate_join_integrity()
         assert result.passed is True
 
     def test_validate_join_integrity_fails_when_fanout(self) -> None:
-        vd = make_variables()
         fanout = pd.DataFrame({"entity_id": [1, 1, 2], "score": [0.9, 0.7, 0.4]})
-        result = vd.validate_join_integrity(fanout, _UNIVERSE_DF)
+        vd = make_variables(variables_df=fanout)
+        result = vd.validate_join_integrity()
         assert result.passed is False
 
     def test_validate_join_integrity_check_name(self) -> None:
         vd = make_variables()
-        result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
+        result = vd.validate_join_integrity()
         assert result.check_name == "join_integrity"
 
     def test_validate_join_integrity_stores_result_on_self(self) -> None:
         vd = make_variables()
         assert vd.join_validation is None
-        result = vd.validate_join_integrity(_VARIABLES_DF, _UNIVERSE_DF)
+        result = vd.validate_join_integrity()
         assert vd.join_validation is result
 
 
@@ -194,31 +194,31 @@ class TestVariablesDatasetValidation:
 class TestVariablesDatasetResolveVariables:
     def setup_method(self) -> None:
         self.vd = make_variables()
-        self.joined = self.vd.to_pandas()
         self.pipeline = make_pipeline()
 
     def test_resolve_variables_returns_list_of_variables(self) -> None:
-        result = self.vd.resolve_variables(self.joined, self.pipeline)
+        result = self.vd.resolve_variables(self.pipeline)
         assert isinstance(result, list)
         assert all(isinstance(v, Variable) for v in result)
 
     def test_resolve_variables_excludes_vd_matched_column(self) -> None:
-        result = self.vd.resolve_variables(self.joined, self.pipeline)
+        result = self.vd.resolve_variables(self.pipeline)
         names = [v.name for v in result]
         assert "__vd_matched__" not in names
 
     def test_resolve_variables_one_variable_per_column(self) -> None:
-        df = pd.DataFrame({"entity_id": [1], "a": [1], "b": [2], "__vd_matched__": [True]})
-        result = self.vd.resolve_variables(df, self.pipeline)
-        assert len(result) == 3  # entity_id, a, b
+        three_col_df = pd.DataFrame({"entity_id": [1], "a": [1], "b": [2]})
+        vd = make_variables(variables_df=three_col_df)
+        result = vd.resolve_variables(self.pipeline)
+        assert len(result) == 3  # entity_id, a, b (plus __vd_matched__ excluded)
 
     def test_resolve_variables_metadata_populated_by_pipeline(self) -> None:
-        result = self.vd.resolve_variables(self.joined, self.pipeline)
+        result = self.vd.resolve_variables(self.pipeline)
         for v in result:
             assert "storage_dtype" in v.metadata
 
     def test_resolve_variables_stores_result_on_self(self) -> None:
-        result = self.vd.resolve_variables(self.joined, self.pipeline)
+        result = self.vd.resolve_variables(self.pipeline)
         assert self.vd.variables is result
 
 
@@ -228,22 +228,45 @@ class TestVariablesDatasetResolveVariables:
 
 
 class TestCaching:
-    def test_universe_to_pandas_cached_on_second_call(self) -> None:
+    def test_universe_materialise_cached_on_second_call(self) -> None:
         u = make_universe()
-        first = u.to_pandas()
-        second = u.to_pandas()
+        first = u.materialise()
+        second = u.materialise()
         assert first is second
 
-    def test_variables_to_pandas_cached_on_second_call(self) -> None:
+    def test_universe_materialise_force_calls_adapter_again(self) -> None:
+        adapter = MockAdapter({_UNIVERSE_SQL: _UNIVERSE_DF})
+        u = UniverseDataset(sql=_UNIVERSE_SQL, primary_key=["entity_id"], adapter=adapter)
+        u.materialise()
+        call_count_before = adapter.call_count(_UNIVERSE_SQL)
+        u.materialise(force=True)
+        assert adapter.call_count(_UNIVERSE_SQL) == call_count_before + 1
+
+    def test_variables_materialise_cached_on_second_call(self) -> None:
         vd = make_variables()
-        first = vd.to_pandas()
-        second = vd.to_pandas()
+        first = vd.materialise()
+        second = vd.materialise()
         assert first is second
 
-    def test_variables_data_attribute_populated_after_to_pandas(self) -> None:
+    def test_variables_materialise_force_calls_adapter_again(self) -> None:
+        u = make_universe()
+        adapter = MockAdapter({_VARIABLES_SQL: _VARIABLES_DF})
+        vd = VariablesDataset(
+            sql=_VARIABLES_SQL,
+            primary_key=["entity_id"],
+            universe=u,
+            join_keys={"entity_id": "entity_id"},
+            adapter=adapter,
+        )
+        vd.materialise()
+        call_count_before = adapter.call_count(_VARIABLES_SQL)
+        vd.materialise(force=True)
+        assert adapter.call_count(_VARIABLES_SQL) == call_count_before + 1
+
+    def test_variables_data_attribute_populated_after_materialise(self) -> None:
         vd = make_variables()
         assert vd._data is None
-        vd.to_pandas()
+        vd.materialise()
         assert vd._data is not None
 
 
@@ -254,21 +277,20 @@ class TestCaching:
 
 class TestVariablesDatasetEdgeCases:
     def test_validate_join_integrity_fails_for_missing_join_keys(self) -> None:
-        vd = make_variables()
-        # DataFrame missing the join key column entirely
         no_key_df = pd.DataFrame({"score": [0.9, 0.4]})
-        result = vd.validate_join_integrity(no_key_df, _UNIVERSE_DF)
+        vd = make_variables(variables_df=no_key_df)
+        result = vd.validate_join_integrity()
         assert result.passed is False
         assert "missing_join_keys" in result.details
 
     def test_validate_join_integrity_null_join_keys_not_flagged_as_fanout(self) -> None:
-        vd = make_variables()
         # Multiple null join keys should NOT count as fan-out (SQL NULL semantics)
         null_keys = pd.DataFrame({"entity_id": [None, None, 1], "score": [0.1, 0.2, 0.9]})
-        result = vd.validate_join_integrity(null_keys, _UNIVERSE_DF)
+        vd = make_variables(variables_df=null_keys)
+        result = vd.validate_join_integrity()
         assert result.passed is True
 
-    def test_to_pandas_raises_if_vd_matched_in_universe(self) -> None:
+    def test_materialise_raises_if_vd_matched_in_universe(self) -> None:
         import pytest
 
         clash_df = pd.DataFrame({"entity_id": [1, 2, 3], "__vd_matched__": [True, True, False]})
@@ -276,4 +298,10 @@ class TestVariablesDatasetEdgeCases:
         u = UniverseDataset(sql=_UNIVERSE_SQL, primary_key=["entity_id"], adapter=adapter)
         vd = make_variables(universe=u)
         with pytest.raises(ValueError, match="__vd_matched__"):
-            vd.to_pandas()
+            vd.materialise()
+
+    def test_raw_variables_data_populated_after_materialise(self) -> None:
+        vd = make_variables()
+        assert vd._raw_variables_data is None
+        vd.materialise()
+        assert vd._raw_variables_data is not None

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 
 class BaseCheck(ABC):
@@ -33,22 +34,22 @@ class BaseCheck(ABC):
         """Business thresholds and configuration for this check."""
         return {}
 
-    def calibrate(self, reference_data: pd.DataFrame) -> None:  # noqa: B027
-        """Establish a statistical baseline from *reference_data*.
+    def calibrate(self, dataset: VariablesDataset) -> None:  # noqa: B027
+        """Establish a statistical baseline from *dataset*.
 
         The default implementation is a no-op. Override in checks that need
         to derive thresholds from historical data (e.g. drift detection).
         """
 
     @abstractmethod
-    def check(self, data: pd.DataFrame, variable: Variable) -> CheckResult:
-        """Run the check against *data* for *variable* and return a result."""
+    def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
+        """Run the check against *dataset* for *variable* and return a result."""
 
 
 class BaseCrossSectionalCheck(BaseCheck, ABC):
     """Base for checks that operate on entity-level (point-in-time) data.
 
-    ``check()`` receives the universe-joined DataFrame where each row is one
+    ``check()`` receives a VariablesDataset where each row is one
     entity. ``__vd_matched__`` marks whether the entity appeared in the
     variables dataset.
     """

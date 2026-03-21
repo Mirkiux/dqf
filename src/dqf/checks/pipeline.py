@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any
 
 from dqf.checks.base import BaseCheck
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 
 class CheckPipeline(BaseCheck):
@@ -52,20 +53,22 @@ class CheckPipeline(BaseCheck):
     def params(self) -> dict[str, Any]:
         return {}
 
-    def calibrate(self, reference_data: pd.DataFrame) -> None:
+    def calibrate(self, dataset: VariablesDataset) -> None:
         """Delegate calibration to every step."""
         for _, check in self._steps:
-            check.calibrate(reference_data)
+            check.calibrate(dataset)
 
-    def check(self, data: pd.DataFrame, variable: Variable) -> CheckResult:
+    def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
         """Run all steps and return a single aggregated result.
 
         Passes if every step passes; fails otherwise.  Used when the pipeline
         itself is a step inside another pipeline.
         """
-        results = self.run(data, variable)
+        results = self.run(dataset, variable)
         all_passed = all(r.passed for r in results)
-        population_size = results[0].population_size if results else 1
+        population_size = (
+            results[0].population_size if results else len(dataset.universe.materialise())
+        )
         return CheckResult(
             check_name=self.name,
             passed=all_passed,
@@ -79,7 +82,7 @@ class CheckPipeline(BaseCheck):
     # Pipeline-specific interface
     # ------------------------------------------------------------------
 
-    def run(self, data: pd.DataFrame, variable: Variable) -> list[CheckResult]:
+    def run(self, dataset: VariablesDataset, variable: Variable) -> list[CheckResult]:
         """Execute all steps in order and return the collected results.
 
         Short-circuits when ``stop_on_failure=True`` and a ``FAILURE``-
@@ -87,7 +90,7 @@ class CheckPipeline(BaseCheck):
         """
         results: list[CheckResult] = []
         for _, check in self._steps:
-            result = check.check(data, variable)
+            result = check.check(dataset, variable)
             results.append(result)
             if self._stop_on_failure and not result.passed and result.severity == Severity.FAILURE:
                 break

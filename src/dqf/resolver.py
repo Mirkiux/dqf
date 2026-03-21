@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING
 
 from dqf.checks.pipeline import CheckPipeline
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 # Each rule is stored as (insertion_index, priority, predicate, factory).
 # insertion_index ensures equal-priority rules keep registration order after sort.
@@ -66,6 +69,6 @@ class CheckSuiteResolver:
             "Register a catch-all rule (predicate=lambda v: True) as a fallback."
         )
 
-    def resolve_all(self, variables: list[Variable]) -> dict[str, Any]:
-        """Resolve every variable in *variables* and return a name→pipeline mapping."""
-        return {v.name: self.resolve(v) for v in variables}
+    def resolve_all(self, dataset: VariablesDataset) -> dict[str, CheckPipeline]:
+        """Resolve every variable in *dataset.variables* and return a name→pipeline mapping."""
+        return {v.name: self.resolve(v) for v in dataset.variables}

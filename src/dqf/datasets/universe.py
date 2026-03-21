@@ -14,6 +14,12 @@ class UniverseDataset:
     The universe is the authoritative source of entity identity.  All
     percentage-based metrics are measured against ``len(universe)``.
 
+    SQL is executed in the native engine via *adapter* — Oracle runs on Oracle,
+    Databricks on Databricks.  Only the result set crosses into pandas, keeping
+    all check logic engine-agnostic.  The materialized DataFrame is cached on
+    first call to :meth:`to_pandas` so the dataset can be passed around as a
+    rich stateful object without re-querying the engine.
+
     Parameters
     ----------
     sql:
@@ -37,10 +43,17 @@ class UniverseDataset:
         self.primary_key = primary_key
         self.adapter = adapter
         self.time_field = time_field
+        self._data: pd.DataFrame | None = None
 
     def to_pandas(self) -> pd.DataFrame:
-        """Execute the universe query and return the result as a DataFrame."""
-        return self.adapter.execute(self.sql)
+        """Execute the universe query and return the cached DataFrame.
+
+        The query is executed once and the result cached.  Subsequent calls
+        return the same object without hitting the engine again.
+        """
+        if self._data is None:
+            self._data = self.adapter.execute(self.sql)
+        return self._data
 
     def validate_pk_uniqueness(self, data: pd.DataFrame) -> ValidationResult:
         """Check that *primary_key* columns form a unique key in *data*."""

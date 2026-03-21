@@ -202,3 +202,60 @@ class TestVariablesDatasetResolveVariables:
     def test_resolve_variables_stores_result_on_self(self) -> None:
         result = self.vd.resolve_variables(self.joined, self.pipeline)
         assert self.vd.variables is result
+
+
+# ---------------------------------------------------------------------------
+# TestCaching
+# ---------------------------------------------------------------------------
+
+
+class TestCaching:
+    def test_universe_to_pandas_cached_on_second_call(self) -> None:
+        u = make_universe()
+        first = u.to_pandas()
+        second = u.to_pandas()
+        assert first is second
+
+    def test_variables_to_pandas_cached_on_second_call(self) -> None:
+        vd = make_variables()
+        first = vd.to_pandas()
+        second = vd.to_pandas()
+        assert first is second
+
+    def test_variables_data_attribute_populated_after_to_pandas(self) -> None:
+        vd = make_variables()
+        assert vd._data is None
+        vd.to_pandas()
+        assert vd._data is not None
+
+
+# ---------------------------------------------------------------------------
+# TestVariablesDatasetEdgeCases
+# ---------------------------------------------------------------------------
+
+
+class TestVariablesDatasetEdgeCases:
+    def test_validate_join_integrity_fails_for_missing_join_keys(self) -> None:
+        vd = make_variables()
+        # DataFrame missing the join key column entirely
+        no_key_df = pd.DataFrame({"score": [0.9, 0.4]})
+        result = vd.validate_join_integrity(no_key_df, _UNIVERSE_DF)
+        assert result.passed is False
+        assert "missing_join_keys" in result.details
+
+    def test_validate_join_integrity_null_join_keys_not_flagged_as_fanout(self) -> None:
+        vd = make_variables()
+        # Multiple null join keys should NOT count as fan-out (SQL NULL semantics)
+        null_keys = pd.DataFrame({"entity_id": [None, None, 1], "score": [0.1, 0.2, 0.9]})
+        result = vd.validate_join_integrity(null_keys, _UNIVERSE_DF)
+        assert result.passed is True
+
+    def test_to_pandas_raises_if_vd_matched_in_universe(self) -> None:
+        import pytest
+
+        clash_df = pd.DataFrame({"entity_id": [1, 2, 3], "__vd_matched__": [True, True, False]})
+        adapter = MockAdapter({_UNIVERSE_SQL: clash_df})
+        u = UniverseDataset(sql=_UNIVERSE_SQL, primary_key=["entity_id"], adapter=adapter)
+        vd = make_variables(universe=u)
+        with pytest.raises(ValueError, match="__vd_matched__"):
+            vd.to_pandas()

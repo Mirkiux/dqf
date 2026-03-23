@@ -97,6 +97,31 @@ class ChiSquaredDriftCheck(BaseLongitudinalCheck):
         df = dataset.adapter.execute(sql)
         return self._compute(df, variable, population_size)
 
+    def _chi2_p_value(
+        self,
+        baseline_counts: dict[str, int],
+        test_counts: dict[str, int],
+    ) -> float | None:
+        """Return the chi-squared p-value comparing two category distributions.
+
+        Builds a 2-row contingency table from *baseline_counts* and *test_counts*,
+        runs :func:`scipy.stats.chi2_contingency`, and returns the p-value.
+        Returns ``None`` when the test cannot be performed (empty samples,
+        identical distributions, or numerical error).
+        """
+        all_cats = sorted(set(baseline_counts) | set(test_counts))
+        b_arr = [baseline_counts.get(c, 0) for c in all_cats]
+        t_arr = [test_counts.get(c, 0) for c in all_cats]
+
+        if sum(b_arr) == 0 or sum(t_arr) == 0:
+            return None
+        try:
+            _, p_value, _, _ = chi2_contingency([b_arr, t_arr])
+            p_f = float(p_value)
+            return None if math.isnan(p_f) else p_f
+        except ValueError:
+            return None
+
     def _compute(self, df: pd.DataFrame, variable: Variable, population_size: int) -> CheckResult:
         periods = sorted(df["period"].unique())
         n = len(periods)
@@ -133,18 +158,9 @@ class ChiSquaredDriftCheck(BaseLongitudinalCheck):
                 cat = str(row["category"])
                 test_counts[cat] = test_counts.get(cat, 0) + int(row["count"])
 
-            all_cats = sorted(set(baseline_counts) | set(test_counts))
-            b_arr = [baseline_counts.get(c, 0) for c in all_cats]
-            t_arr = [test_counts.get(c, 0) for c in all_cats]
-
-            if sum(b_arr) > 0 and sum(t_arr) > 0:
-                try:
-                    _, p_value, _, _ = chi2_contingency([b_arr, t_arr])
-                    p_f = float(p_value)
-                    if not math.isnan(p_f):
-                        min_p = min(min_p, p_f)
-                except ValueError:
-                    pass
+            p_val = self._chi2_p_value(baseline_counts, test_counts)
+            if p_val is not None:
+                min_p = min(min_p, p_val)
 
             # Expand baseline with this period's counts
             for cat, cnt in test_counts.items():

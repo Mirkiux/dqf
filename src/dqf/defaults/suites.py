@@ -229,6 +229,8 @@ def numeric_continuous_pipeline_no_time(null_threshold: float = 0.10) -> CheckPi
 
 
 def numeric_discrete_pipeline(
+    time_field: str | None = None,
+    period: str = "month",
     null_threshold: float = 0.10,
     max_cardinality: int = 50,
 ) -> CheckPipeline:
@@ -240,24 +242,39 @@ def numeric_discrete_pipeline(
     2. **cardinality** (WARNING) — warn when distinct values exceed *max_cardinality*,
        which may indicate the column has been mis-classified as discrete.
     3. **outlier** (FAILURE) — univariate outlier detection via Tukey's IQR method.
+    4. **chisquared_drift** (FAILURE) — sequential chi-squared test for distribution
+       drift across periods.  Added only when *time_field* is provided.
 
     Parameters
     ----------
+    time_field:
+        Name of the datetime column.  When provided, a
+        :class:`~dqf.checks.longitudinal.ChiSquaredDriftCheck` is appended.
+    period:
+        DATE_TRUNC period (e.g. ``"month"``).
     null_threshold:
         Maximum allowed null rate.  Default ``0.10``.
     max_cardinality:
         Maximum expected number of distinct values.  Default ``50``.
     """
-    return CheckPipeline(
-        [
-            ("null_rate", NullRateCheck(threshold=null_threshold, severity=Severity.FAILURE)),
+    steps: list[tuple[str, object]] = [
+        ("null_rate", NullRateCheck(threshold=null_threshold, severity=Severity.FAILURE)),
+        (
+            "cardinality",
+            CardinalityCheck(max_cardinality=max_cardinality, severity=Severity.WARNING),
+        ),
+        ("outlier", OutlierCheck(severity=Severity.FAILURE)),
+    ]
+    if time_field is not None:
+        steps.append(
             (
-                "cardinality",
-                CardinalityCheck(max_cardinality=max_cardinality, severity=Severity.WARNING),
-            ),
-            ("outlier", OutlierCheck(severity=Severity.FAILURE)),
-        ]
-    )
+                "chisquared_drift",
+                ChiSquaredDriftCheck(
+                    time_field=time_field, period=period, severity=Severity.FAILURE
+                ),
+            )
+        )
+    return CheckPipeline(steps)  # type: ignore[arg-type]
 
 
 def categorical_pipeline(
@@ -471,11 +488,13 @@ def build_default_resolver(
         )
 
     # Priority 10 — NUMERIC_DISCRETE feature
+    _tf3 = time_field
+    _p3 = period
     _nt3 = null_threshold
     _mdc = max_discrete_cardinality
     resolver.register(
         predicate=lambda v: v.dtype == DataType.NUMERIC_DISCRETE,
-        pipeline_factory=lambda: numeric_discrete_pipeline(_nt3, _mdc),
+        pipeline_factory=lambda: numeric_discrete_pipeline(_tf3, _p3, _nt3, _mdc),
         priority=10,
     )
 

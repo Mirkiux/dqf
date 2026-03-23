@@ -147,12 +147,24 @@ class TestNumericContinuousPipelineNoTime:
 
 
 class TestNumericDiscretePipeline:
-    def test_has_null_cardinality_outlier(self):
+    def test_has_null_cardinality_outlier_without_time(self):
         assert step_types(numeric_discrete_pipeline()) == [
             NullRateCheck,
             CardinalityCheck,
             OutlierCheck,
         ]
+
+    def test_adds_chisquared_drift_with_time(self):
+        assert step_types(numeric_discrete_pipeline(time_field="ts")) == [
+            NullRateCheck,
+            CardinalityCheck,
+            OutlierCheck,
+            ChiSquaredDriftCheck,
+        ]
+
+    def test_chisquared_drift_is_failure(self):
+        checks = step_checks(numeric_discrete_pipeline(time_field="ts"))
+        assert checks[3].severity == Severity.FAILURE
 
     def test_cardinality_is_warning(self):
         checks = step_checks(numeric_discrete_pipeline())
@@ -277,10 +289,17 @@ class TestBuildDefaultResolver:
         pipeline = build_default_resolver(time_field="ts").resolve(v)
         assert step_types(pipeline) == [NullRateCheck, TrendCheck, StructuralBreakCheck]
 
-    def test_numeric_discrete(self):
+    def test_numeric_discrete_no_time(self):
         v = make_variable(dtype=DataType.NUMERIC_DISCRETE)
         pipeline = build_default_resolver().resolve(v)
         assert step_types(pipeline) == [NullRateCheck, CardinalityCheck, OutlierCheck]
+
+    def test_numeric_discrete_with_time_gets_chisquared(self):
+        v = make_variable(dtype=DataType.NUMERIC_DISCRETE)
+        pipeline = build_default_resolver(time_field="ts").resolve(v)
+        assert step_types(pipeline) == [
+            NullRateCheck, CardinalityCheck, OutlierCheck, ChiSquaredDriftCheck
+        ]
 
     def test_categorical(self):
         v = make_variable(dtype=DataType.CATEGORICAL)

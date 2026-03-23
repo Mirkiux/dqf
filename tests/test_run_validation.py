@@ -335,7 +335,7 @@ class TestRunValidationAutoResolveVariables:
     def test_variables_auto_resolved_when_empty(self) -> None:
         ds = make_dataset()
         builder = MetadataBuilderPipeline([("nop", NopBuilder())])
-        ds.run_validation(make_resolver(), builder_pipeline=builder)
+        ds.run_validation(make_resolver(), metadata_builder_pipeline=builder)
         # universe has entity_id; variables has entity_id + score + category
         # joined result has entity_id + score + category (+ __vd_matched__ excluded)
         assert len(ds.variables) > 0
@@ -346,7 +346,7 @@ class TestRunValidationAutoResolveVariables:
         pre_set = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         ds.variables = pre_set
         builder = MetadataBuilderPipeline([("nop", NopBuilder())])
-        ds.run_validation(make_resolver(), builder_pipeline=builder)
+        ds.run_validation(make_resolver(), metadata_builder_pipeline=builder)
         assert len(ds.variables) == 1
 
     def test_no_builder_pipeline_and_empty_variables_produces_empty_report(self) -> None:
@@ -393,3 +393,58 @@ class TestValidationReportHelpers:
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver(AlwaysFailCheck()))
         assert report.warnings() == []
+
+
+# ---------------------------------------------------------------------------
+# TestRunValidationStateAndCaching
+# ---------------------------------------------------------------------------
+
+
+class TestRunValidationStateAndCaching:
+    def test_validation_state_pending_before_run(self) -> None:
+        ds = make_dataset()
+        assert ds.validation_state == ValidationStatus.PENDING
+
+    def test_validation_report_none_before_run(self) -> None:
+        ds = make_dataset()
+        assert ds.validation_report is None
+
+    def test_validation_state_passed_after_all_pass(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        ds.run_validation(make_resolver(AlwaysPassCheck()))
+        assert ds.validation_state == ValidationStatus.PASSED
+
+    def test_validation_state_failed_after_failure(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        ds.run_validation(make_resolver(AlwaysFailCheck()))
+        assert ds.validation_state == ValidationStatus.FAILED
+
+    def test_validation_report_stored_on_dataset(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        report = ds.run_validation(make_resolver())
+        assert ds.validation_report is report
+
+    def test_second_run_skipped_when_state_is_passed(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        first = ds.run_validation(make_resolver(AlwaysPassCheck()))
+        second = ds.run_validation(make_resolver(AlwaysPassCheck()))
+        assert second is first  # same cached report returned
+
+    def test_second_run_not_skipped_when_state_is_failed(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        first = ds.run_validation(make_resolver(AlwaysFailCheck()))
+        second = ds.run_validation(make_resolver(AlwaysFailCheck()))
+        assert second is not first  # re-executed
+
+    def test_force_reruns_even_when_state_is_passed(self) -> None:
+        ds = make_dataset()
+        ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
+        first = ds.run_validation(make_resolver(AlwaysPassCheck()))
+        assert ds.validation_state == ValidationStatus.PASSED
+        second = ds.run_validation(make_resolver(AlwaysPassCheck()), force=True)
+        assert second is not first  # fresh report produced

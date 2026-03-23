@@ -123,24 +123,29 @@ class SeasonalityCheck(BaseLongitudinalCheck):
                 threshold=self._p_threshold,
                 metadata={"skipped": True, "reason": "Insufficient groups for Kruskal-Wallis"},
             )
-        stat, p_value = stats.kruskal(*valid_groups)
+        _constant_result = CheckResult(
+            check_name=self.name,
+            passed=True,
+            severity=self.severity,
+            observed_value=0.0,
+            population_size=population_size,
+            threshold=self._p_threshold,
+            metadata={
+                "n_periods": n,
+                "n_seasons": self._season_length,
+                "note": "constant series",
+            },
+        )
+        try:
+            stat, p_value = stats.kruskal(*valid_groups)
+        except ValueError:
+            # scipy <1.11 raises ValueError when all values are identical
+            return _constant_result
         stat_f = float(stat)
         p_f = float(p_value)
-        # NaN occurs when all groups have identical values (zero variance) — no seasonal signal
+        # scipy >=1.11 returns NaN when all values are identical — no seasonal signal
         if math.isnan(p_f) or math.isnan(stat_f):
-            return CheckResult(
-                check_name=self.name,
-                passed=True,
-                severity=self.severity,
-                observed_value=0.0,
-                population_size=population_size,
-                threshold=self._p_threshold,
-                metadata={
-                    "n_periods": n,
-                    "n_seasons": self._season_length,
-                    "note": "constant series",
-                },
-            )
+            return _constant_result
         return CheckResult(
             check_name=self.name,
             passed=p_f > self._p_threshold,

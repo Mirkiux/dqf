@@ -75,4 +75,12 @@ class BaseLongitudinalCheck(BaseCheck, ABC):
             The datetime column to group by.
         period:
             Truncation period (e.g. ``"month"``, ``"week"``).
+
+        Notes
+        -----
+        The built-in implementations use ``DATE_TRUNC(period, column)``, which is
+        supported by Databricks/Spark SQL, PostgreSQL, BigQuery, Redshift, and
+        Snowflake but is **not** part of the ANSI SQL standard.  Override this
+        method when targeting engines that use a different truncation function
+        (e.g. ``TRUNC(column, 'MM')`` in Oracle, ``strftime`` in SQLite).
         """

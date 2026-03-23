@@ -298,7 +298,10 @@ class TestBuildDefaultResolver:
         v = make_variable(dtype=DataType.NUMERIC_DISCRETE)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
         assert step_types(pipeline) == [
-            NullRateCheck, CardinalityCheck, OutlierCheck, ChiSquaredDriftCheck
+            NullRateCheck,
+            CardinalityCheck,
+            OutlierCheck,
+            ChiSquaredDriftCheck,
         ]
 
     def test_categorical(self):

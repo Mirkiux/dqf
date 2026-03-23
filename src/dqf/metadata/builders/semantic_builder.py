@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from dqf.enums import DataType
 from dqf.metadata.base import BaseMetadataBuilder
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 _COERCE_THRESHOLD = 0.95
 
@@ -31,7 +34,8 @@ class SemanticTypeInferenceBuilder(BaseMetadataBuilder):
     def name(self) -> str:
         return "semantic_type"
 
-    def profile(self, series: pd.Series, variable: Variable) -> dict[str, Any]:
+    def profile(self, dataset: VariablesDataset, variable: Variable) -> dict[str, Any]:
+        series: pd.Series = dataset.materialise()[variable.name]
         dtype = _infer(series, self._low_cardinality_threshold)
         result: dict[str, Any] = {"semantic_dtype": dtype}
         variable.metadata.update(result)

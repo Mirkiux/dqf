@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
 from dqf.metadata.base import BaseMetadataBuilder
 from dqf.variable import Variable
+
+if TYPE_CHECKING:
+    from dqf.datasets.variables import VariablesDataset
 
 
 class NullabilityProfileBuilder(BaseMetadataBuilder):
@@ -15,7 +18,8 @@ class NullabilityProfileBuilder(BaseMetadataBuilder):
     def name(self) -> str:
         return "nullability"
 
-    def profile(self, series: pd.Series, variable: Variable) -> dict[str, Any]:
+    def profile(self, dataset: VariablesDataset, variable: Variable) -> dict[str, Any]:
+        series: pd.Series = dataset.materialise()[variable.name]
         null_count = int(series.isna().sum())
         total = len(series)
         empirical_null_rate = null_count / total if total > 0 else 0.0

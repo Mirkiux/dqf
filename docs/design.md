@@ -348,6 +348,6 @@ Plans 10, 11, and 13 are parallelizable after Plan 9.
 | 10 | Concrete Cross-Sectional Checks | `plan-10-cross-sectional-checks` | #10 | ✅ Merged |
 | 11 | Concrete Longitudinal Checks | `plan-11-longitudinal-checks` | #11 | ✅ Merged |
 | 12 | ValidationReport and Rendering | `plan-12-validation-report` | #12 | ✅ Merged |
-| 13 | Default Check Suite Configuration | `plan-13-default-suites` | — | ⏳ Pending |
+| 13 | Default Check Suite Configuration | `plan-13-default-suites` | #13 | ✅ Merged |
 | 14 | Integration Tests and Worked Examples | — | — | ⏳ Pending |
 | 15 | Packaging and Documentation | — | — | ⏳ Pending |

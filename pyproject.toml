@@ -12,7 +12,7 @@ requires-python = ">=3.10"
 authors = [{ name = "Mirko" }]
 keywords = ["data quality", "validation", "pipeline", "data engineering", "pyspark", "pandas"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
@@ -36,16 +36,26 @@ dependencies = [
 [project.optional-dependencies]
 spark = ["pyspark>=3.4"]
 databricks = ["databricks-sql-connector>=3.0"]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.25",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
     "ruff>=0.4",
     "mypy>=1.0",
     "hatch>=1.9",
+    "build>=1.0",
+    "twine>=5.0",
 ]
 
 [project.urls]
 Repository = "https://github.com/Mirkiux/dqf"
+Documentation = "https://mirkiux.github.io/dqf"
+Changelog = "https://github.com/Mirkiux/dqf/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/Mirkiux/dqf/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dqf"]

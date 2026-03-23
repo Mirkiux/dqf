@@ -130,9 +130,7 @@ class TestEndToEndCrossSectional:
     def test_null_threshold_strict_fails(self) -> None:
         universe_df = pd.DataFrame({"entity_id": [1, 2, 3, 4, 5]})
         # 2/5 = 40% nulls in score
-        vars_df = pd.DataFrame(
-            {"entity_id": [1, 2, 3, 4, 5], "score": [0.1, None, 0.9, None, 0.7]}
-        )
+        vars_df = pd.DataFrame({"entity_id": [1, 2, 3, 4, 5], "score": [0.1, None, 0.9, None, 0.7]})
         variables = [
             Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.FEATURE)
         ]
@@ -143,9 +141,7 @@ class TestEndToEndCrossSectional:
     def test_null_threshold_lenient_passes(self) -> None:
         universe_df = pd.DataFrame({"entity_id": [1, 2, 3, 4, 5]})
         # 2/5 = 40% nulls in score
-        vars_df = pd.DataFrame(
-            {"entity_id": [1, 2, 3, 4, 5], "score": [0.1, None, 0.9, None, 0.7]}
-        )
+        vars_df = pd.DataFrame({"entity_id": [1, 2, 3, 4, 5], "score": [0.1, None, 0.9, None, 0.7]})
         variables = [
             Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.FEATURE)
         ]
@@ -204,9 +200,7 @@ class TestEndToEndIdentifierAndTarget:
             }
         )
         variables = [
-            Variable(
-                name="score", dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.TARGET
-            ),
+            Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.TARGET),
         ]
         dataset = _make_dataset(
             _UNIVERSE_SQL, "SELECT entity_id, score FROM variables", universe_df, vars_df, variables
@@ -222,11 +216,11 @@ class TestEndToEndIdentifierAndTarget:
             Variable(name="target", dtype=DataType.BOOLEAN, role=VariableRole.TARGET),
         ]
         dataset = _make_dataset(
-            _UNIVERSE_SQL, 
-            "SELECT entity_id, target FROM variables", 
-            universe_df, 
-            vars_df, 
-            variables
+            _UNIVERSE_SQL,
+            "SELECT entity_id, target FROM variables",
+            universe_df,
+            vars_df,
+            variables,
         )
         report = dataset.run_validation(build_default_resolver())
         names = [r.check_name for r in report.variable_results["target"]]
@@ -307,10 +301,7 @@ class TestEndToEndLongitudinal:
         chi_check = ChiSquaredDriftCheck(time_field="ts", period="month")
         agg_sql = _agg_sql(chi_check, "count", "ts", vars_sql)
         agg_df = pd.DataFrame(
-            [
-                (f"2024-0{i}-01", "1", 10)
-                for i in range(1, 7)
-            ]
+            [(f"2024-0{i}-01", "1", 10) for i in range(1, 7)]
             + [(f"2024-0{i}-01", "2", 5) for i in range(1, 7)],
             columns=["period", "category", "count"],
         )
@@ -323,11 +314,7 @@ class TestEndToEndLongitudinal:
             vars_sql,
             universe_df,
             vars_df,
-            [
-                Variable(
-                    name="count", dtype=DataType.NUMERIC_DISCRETE, role=VariableRole.FEATURE
-                )
-            ],
+            [Variable(name="count", dtype=DataType.NUMERIC_DISCRETE, role=VariableRole.FEATURE)],
             extra_results={agg_sql: agg_df},
         )
         report = dataset.run_validation(build_default_resolver(time_field="ts"))
@@ -399,11 +386,7 @@ class TestEndToEndTargetDrift:
         chi_check = ChiSquaredDriftCheck(time_field="ts", period="month")
         agg_sql = _agg_sql(chi_check, "label", "ts", _TARGET_CATEGORICAL_SQL)
         agg_df = pd.DataFrame(
-            [
-                (f"2024-0{i}-01", cat, 10)
-                for i in range(1, 7)
-                for cat in ["A", "B"]
-            ],
+            [(f"2024-0{i}-01", cat, 10) for i in range(1, 7) for cat in ["A", "B"]],
             columns=["period", "category", "count"],
         )
         universe_df = pd.DataFrame({"entity_id": range(1, 121)})
@@ -557,8 +540,9 @@ class TestCustomResolverOnTopOfDefault:
         resolver = build_default_resolver()
         # Priority 100 beats the default NUMERIC_CONTINUOUS rule at priority 15
         resolver.register(
-            predicate=lambda v: v.dtype == DataType.NUMERIC_CONTINUOUS
-            and v.role == VariableRole.FEATURE,
+            predicate=lambda v: (
+                v.dtype == DataType.NUMERIC_CONTINUOUS and v.role == VariableRole.FEATURE
+            ),
             pipeline_factory=lambda: CheckPipeline(
                 [("range", RangeCheck(min_value=0.0, max_value=1.0))]
             ),

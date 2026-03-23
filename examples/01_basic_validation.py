@@ -67,7 +67,7 @@ dataset = dqf.VariablesDataset(
 # ──────────────────────────────────────────────────────────────────────────────
 
 resolver = dqf.build_default_resolver(
-    null_threshold=0.10,          # fail features with > 10% nulls
+    null_threshold=0.10,  # fail features with > 10% nulls
     max_categorical_cardinality=20,
 )
 

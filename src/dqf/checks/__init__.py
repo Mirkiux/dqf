@@ -8,6 +8,13 @@ from dqf.checks.cross_sectional import (
     RegexPatternCheck,
     UniquenessCheck,
 )
+from dqf.checks.longitudinal import (
+    ConceptDriftCheck,
+    DistributionDriftCheck,
+    SeasonalityCheck,
+    StructuralBreakCheck,
+    TrendCheck,
+)
 from dqf.checks.pipeline import CheckPipeline
 
 __all__ = [
@@ -22,4 +29,9 @@ __all__ = [
     "ReferentialIntegrityCheck",
     "RegexPatternCheck",
     "UniquenessCheck",
+    "ConceptDriftCheck",
+    "DistributionDriftCheck",
+    "SeasonalityCheck",
+    "StructuralBreakCheck",
+    "TrendCheck",
 ]

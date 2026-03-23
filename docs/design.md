@@ -329,3 +329,25 @@ API reference documentation (Sphinx or MkDocs), user guide with conceptual expla
 **Critical path**: 1 → 2 → 3 → 6 → 7 → 8 → 9 → 12 → 15
 Plans 4 and 5 can run in parallel with 6 after Plan 3.
 Plans 10, 11, and 13 are parallelizable after Plan 9.
+
+---
+
+## 6. Progress Summary
+
+| Plan | Title | Branch | PR | Status |
+|------|-------|--------|----|--------|
+| 1 | Project Scaffold and Tooling | `plan-01-scaffold` | #1 | ✅ Merged |
+| 2 | Core Primitives and Value Objects | `plan-02-core-primitives` | #2 | ✅ Merged |
+| 3 | The Variable Class | `plan-03-variable` | #3 | ✅ Merged |
+| 4 | DataSourceAdapter Abstraction | `plan-04-adapters` | #4 | ✅ Merged |
+| 5 | Metadata Subsystem | `plan-05-metadata` | #5 | ✅ Merged |
+| 6 | Test Abstractions and CheckPipeline | `plan-06-checks` | #6 | ✅ Merged |
+| 7 | CheckSuiteResolver | `plan-07-resolver` | #7 | ✅ Merged |
+| 8 | Dataset Classes and Materialisation | `plan-08-datasets` | #8 | ✅ Merged |
+| 9 | Validation Orchestration (`run_validation`) | `plan-09-run-validation` | #9 | ✅ Merged |
+| 10 | Concrete Cross-Sectional Checks | `plan-10-cross-sectional-checks` | #10 | ✅ Merged |
+| 11 | Concrete Longitudinal Checks | — | — | ⏳ Pending |
+| 12 | ValidationReport and Rendering | — | — | ⏳ Pending |
+| 13 | Default Check Suite Configuration | — | — | ⏳ Pending |
+| 14 | Integration Tests and Worked Examples | — | — | ⏳ Pending |
+| 15 | Packaging and Documentation | — | — | ⏳ Pending |

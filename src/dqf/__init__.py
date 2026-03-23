@@ -13,7 +13,19 @@ from dqf.adapters import (
     SparkAdapter,
     SQLAlchemyAdapter,
 )
-from dqf.checks import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck, CheckPipeline
+from dqf.checks import (
+    AllowedValuesCheck,
+    BaseCheck,
+    BaseCrossSectionalCheck,
+    BaseLongitudinalCheck,
+    CardinalityCheck,
+    CheckPipeline,
+    NullRateCheck,
+    RangeCheck,
+    ReferentialIntegrityCheck,
+    RegexPatternCheck,
+    UniquenessCheck,
+)
 from dqf.datasets import UniverseDataset, VariablesDataset
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 from dqf.report import ValidationReport
@@ -39,6 +51,13 @@ __all__ = [
     "Severity",
     "ValidationStatus",
     "VariableRole",
+    "AllowedValuesCheck",
+    "CardinalityCheck",
+    "NullRateCheck",
+    "RangeCheck",
+    "ReferentialIntegrityCheck",
+    "RegexPatternCheck",
+    "UniquenessCheck",
     "CheckResult",
     "ValidationReport",
     "ValidationResult",

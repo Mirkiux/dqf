@@ -33,13 +33,13 @@ def make_cross_dataset(col_values, col_name="col"):
     """Build a VariablesDataset with the given values for a single column."""
     universe_df = pd.DataFrame({"id": list(range(len(col_values)))})
     variables_df = pd.DataFrame({"id": list(range(len(col_values))), col_name: col_values})
-    adapter = MockAdapter({
-        UNIVERSE_SQL: universe_df,
-        VARIABLES_SQL: variables_df,
-    })
-    universe = UniverseDataset(
-        sql=UNIVERSE_SQL, primary_key=["id"], adapter=adapter
+    adapter = MockAdapter(
+        {
+            UNIVERSE_SQL: universe_df,
+            VARIABLES_SQL: variables_df,
+        }
     )
+    universe = UniverseDataset(sql=UNIVERSE_SQL, primary_key=["id"], adapter=adapter)
     return VariablesDataset(
         sql=VARIABLES_SQL,
         primary_key=["id"],
@@ -56,11 +56,13 @@ def make_longitudinal_dataset(timeseries_df, check, variable_name="col"):
 
     universe_df = pd.DataFrame({"id": [1, 2, 3]})
     variables_df = pd.DataFrame({"id": [1, 2, 3], variable_name: [1.0, 2.0, 3.0]})
-    adapter = MockAdapter({
-        UNIVERSE_SQL: universe_df,
-        VARIABLES_SQL: variables_df,
-        agg_sql: timeseries_df,
-    })
+    adapter = MockAdapter(
+        {
+            UNIVERSE_SQL: universe_df,
+            VARIABLES_SQL: variables_df,
+            agg_sql: timeseries_df,
+        }
+    )
     universe = UniverseDataset(sql=UNIVERSE_SQL, primary_key=["id"], adapter=adapter)
     return VariablesDataset(
         sql=VARIABLES_SQL,
@@ -174,11 +176,13 @@ class TestOutlierCheck:
 
 def make_proportion_df(positive_counts, ns):
     """Build a timeseries df for ProportionDriftCheck."""
-    return pd.DataFrame({
-        "period": [f"2024-0{i+1}-01" for i in range(len(positive_counts))],
-        "positive": positive_counts,
-        "n": ns,
-    })
+    return pd.DataFrame(
+        {
+            "period": [f"2024-0{i + 1}-01" for i in range(len(positive_counts))],
+            "positive": positive_counts,
+            "n": ns,
+        }
+    )
 
 
 class TestProportionDriftCheck:
@@ -246,7 +250,7 @@ class TestChiSquaredDriftCheck:
         # Same distribution each period: A=5, B=5
         data = []
         for i in range(6):
-            period = f"2024-0{i+1}-01"
+            period = f"2024-0{i + 1}-01"
             data.extend([(period, "A", 5), (period, "B", 5)])
         result = self._check(data)
         assert result.passed is True
@@ -255,10 +259,10 @@ class TestChiSquaredDriftCheck:
         # First half: A=9, B=1; second half: A=1, B=9 (extreme shift)
         data = []
         for i in range(3):
-            period = f"2024-0{i+1}-01"
+            period = f"2024-0{i + 1}-01"
             data.extend([(period, "A", 90), (period, "B", 10)])
         for i in range(3, 6):
-            period = f"2024-0{i+1}-01"
+            period = f"2024-0{i + 1}-01"
             data.extend([(period, "A", 10), (period, "B", 90)])
         result = self._check(data)
         assert result.passed is False
@@ -277,7 +281,7 @@ class TestChiSquaredDriftCheck:
     def test_min_p_in_metadata(self):
         data = []
         for i in range(4):
-            period = f"2024-0{i+1}-01"
+            period = f"2024-0{i + 1}-01"
             data.extend([(period, "A", 5), (period, "B", 5)])
         result = self._check(data)
         assert "min_p_value" in result.metadata
@@ -312,7 +316,7 @@ class TestKSDriftCheck:
         import numpy as np
 
         rng = np.random.default_rng(42)
-        periods = {f"2024-0{i+1}-01": list(rng.normal(0, 1, 50)) for i in range(6)}
+        periods = {f"2024-0{i + 1}-01": list(rng.normal(0, 1, 50)) for i in range(6)}
         result = self._check(periods)
         assert result.passed is True
 
@@ -320,9 +324,9 @@ class TestKSDriftCheck:
         # First 3 periods: mean=0; next 3 periods: mean=100 (extreme shift)
         periods = {}
         for i in range(3):
-            periods[f"2024-0{i+1}-01"] = [0.0 + j * 0.1 for j in range(50)]
+            periods[f"2024-0{i + 1}-01"] = [0.0 + j * 0.1 for j in range(50)]
         for i in range(3, 6):
-            periods[f"2024-0{i+1}-01"] = [100.0 + j * 0.1 for j in range(50)]
+            periods[f"2024-0{i + 1}-01"] = [100.0 + j * 0.1 for j in range(50)]
         result = self._check(periods)
         assert result.passed is False
 
@@ -338,6 +342,6 @@ class TestKSDriftCheck:
         assert KSDriftCheck(time_field="ts").name == "ks_drift"
 
     def test_min_p_in_metadata(self):
-        periods = {f"2024-0{i+1}-01": [float(i)] * 20 for i in range(4)}
+        periods = {f"2024-0{i + 1}-01": [float(i)] * 20 for i in range(4)}
         result = self._check(periods)
         assert "min_p_value" in result.metadata

@@ -300,8 +300,9 @@ class VariablesDataset:
         report = ValidationReport(
             dataset_name=dataset_name,
             run_timestamp=datetime.now(timezone.utc),
+            universe_size=len(self.universe.materialise()),
             dataset_level_checks=[pk_result, join_result],
-            variable_reports={v.name: list(v.check_results) for v in self.variables},
+            variable_results={v.name: list(v.check_results) for v in self.variables},
         )
         self.validation_report = report
         self.validation_state = report.overall_status

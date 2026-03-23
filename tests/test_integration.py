@@ -16,7 +16,6 @@ from dqf.adapters.mock_adapter import MockAdapter
 from dqf.checks.longitudinal.chisquared_drift import ChiSquaredDriftCheck
 from dqf.checks.longitudinal.ks_drift import KSDriftCheck
 from dqf.checks.longitudinal.proportion_drift import ProportionDriftCheck
-from dqf.checks.longitudinal.structural_break import StructuralBreakCheck
 from dqf.checks.longitudinal.trend import TrendCheck
 from dqf.checks.pipeline import CheckPipeline
 from dqf.datasets.universe import UniverseDataset
@@ -223,7 +222,11 @@ class TestEndToEndIdentifierAndTarget:
             Variable(name="target", dtype=DataType.BOOLEAN, role=VariableRole.TARGET),
         ]
         dataset = _make_dataset(
-            _UNIVERSE_SQL, "SELECT entity_id, target FROM variables", universe_df, vars_df, variables
+            _UNIVERSE_SQL, 
+            "SELECT entity_id, target FROM variables", 
+            universe_df, 
+            vars_df, 
+            variables
         )
         report = dataset.run_validation(build_default_resolver())
         names = [r.check_name for r in report.variable_results["target"]]

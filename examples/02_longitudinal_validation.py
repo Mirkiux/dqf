@@ -12,7 +12,6 @@ from __future__ import annotations
 import pandas as pd
 
 import dqf
-from dqf.checks.longitudinal.structural_break import StructuralBreakCheck
 from dqf.checks.longitudinal.trend import TrendCheck
 
 # ──────────────────────────────────────────────────────────────────────────────

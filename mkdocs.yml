@@ -1,0 +1,77 @@
+site_name: dqf — Data Quality Framework
+site_url: https://mirkiux.github.io/dqf
+repo_url: https://github.com/Mirkiux/dqf
+repo_name: Mirkiux/dqf
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_root_heading: true
+            heading_level: 2
+
+nav:
+  - Home: index.md
+  - Concepts: concepts.md
+  - API Reference:
+    - Overview: api/index.md
+    - Enumerations: api/enums.md
+    - Variable: api/variable.md
+    - Results: api/results.md
+    - Adapters: api/adapters.md
+    - Checks:
+      - Overview: api/checks/index.md
+      - Pipeline: api/checks/pipeline.md
+      - Cross-sectional: api/checks/cross_sectional.md
+      - Longitudinal: api/checks/longitudinal.md
+    - Resolver: api/resolver.md
+    - Datasets: api/datasets.md
+    - Default Resolver: api/defaults.md
+    - Report: api/report.md
+  - Examples:
+    - Basic validation: examples/01_basic_validation.md
+    - Longitudinal validation: examples/02_longitudinal_validation.md
+    - Custom resolver: examples/03_custom_resolver.md
+    - Target drift: examples/04_target_drift.md
+  - Changelog: changelog.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.snippets
+  - toc:
+      permalink: true

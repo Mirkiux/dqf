@@ -238,14 +238,14 @@ class TestRunValidationVariableReports:
         ds = make_dataset()
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver())
-        assert "score" in report.variable_reports
+        assert "score" in report.variable_results
 
     def test_variable_reports_contain_check_results(self) -> None:
         ds = make_dataset()
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver())
-        assert len(report.variable_reports["score"]) == 1
-        assert report.variable_reports["score"][0].check_name == "always_pass"
+        assert len(report.variable_results["score"]) == 1
+        assert report.variable_results["score"][0].check_name == "always_pass"
 
     def test_multiple_variables_all_present_in_report(self) -> None:
         ds = make_dataset()
@@ -254,7 +254,7 @@ class TestRunValidationVariableReports:
             Variable(name="category", dtype=DataType.CATEGORICAL),
         ]
         report = ds.run_validation(make_resolver())
-        assert set(report.variable_reports.keys()) == {"score", "category"}
+        assert set(report.variable_results.keys()) == {"score", "category"}
 
     def test_check_results_attached_to_variable_objects(self) -> None:
         ds = make_dataset()
@@ -272,13 +272,13 @@ class TestRunValidationVariableReports:
             lambda: CheckPipeline([("pass", AlwaysPassCheck()), ("warn", AlwaysWarnCheck())]),
         )
         report = ds.run_validation(r)
-        assert len(report.variable_reports["score"]) == 2
+        assert len(report.variable_results["score"]) == 2
 
     def test_empty_variables_produces_empty_report(self) -> None:
         ds = make_dataset()
         ds.variables = []
         report = ds.run_validation(CheckSuiteResolver())
-        assert report.variable_reports == {}
+        assert report.variable_results == {}
 
 
 # ---------------------------------------------------------------------------
@@ -353,7 +353,7 @@ class TestRunValidationAutoResolveVariables:
         ds = make_dataset()
         # variables is empty, no builder_pipeline → no variables resolved
         report = ds.run_validation(CheckSuiteResolver())
-        assert report.variable_reports == {}
+        assert report.variable_results == {}
 
 
 # ---------------------------------------------------------------------------
@@ -374,25 +374,24 @@ class TestValidationReportHelpers:
         report = ds.run_validation(make_resolver(AlwaysPassCheck()))
         assert report.failed_variables() == []
 
-    def test_warnings_returns_warning_severity_results(self) -> None:
+    def test_warned_variables_returns_warning_variable_names(self) -> None:
         ds = make_dataset()
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver(AlwaysWarnCheck()))
-        warns = report.warnings()
-        assert len(warns) == 1
-        assert warns[0].check_name == "always_warn"
+        warns = report.warned_variables()
+        assert warns == ["score"]
 
-    def test_warnings_empty_when_no_warning_failures(self) -> None:
+    def test_warned_variables_empty_when_no_warning_failures(self) -> None:
         ds = make_dataset()
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver(AlwaysPassCheck()))
-        assert report.warnings() == []
+        assert report.warned_variables() == []
 
-    def test_warnings_excludes_failure_severity_results(self) -> None:
+    def test_warned_variables_excludes_failure_severity_variables(self) -> None:
         ds = make_dataset()
         ds.variables = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         report = ds.run_validation(make_resolver(AlwaysFailCheck()))
-        assert report.warnings() == []
+        assert report.warned_variables() == []
 
 
 # ---------------------------------------------------------------------------

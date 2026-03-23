@@ -49,7 +49,7 @@ def make_report(**kwargs):
         },
     )
     defaults.update(kwargs)
-    return ValidationReport(**defaults)
+    return ValidationReport(**defaults)  # type: ignore[arg-type]
 
 
 class TestFields:

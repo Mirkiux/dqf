@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pandas as pd
 
 from dqf.adapters.base import DataSourceAdapter
 from dqf.datasets.universe import UniverseDataset
 from dqf.enums import DataType
 from dqf.metadata.base import MetadataBuilderPipeline
+from dqf.report import ValidationReport
+from dqf.resolver import CheckSuiteResolver
 from dqf.results import ValidationResult
 from dqf.variable import Variable
 
@@ -220,3 +224,67 @@ class VariablesDataset:
             resolved.append(v)
         self.variables = resolved
         return resolved
+
+    # ------------------------------------------------------------------
+    # Validation orchestration
+    # ------------------------------------------------------------------
+
+    def run_validation(
+        self,
+        resolver: CheckSuiteResolver,
+        builder_pipeline: MetadataBuilderPipeline | None = None,
+        dataset_name: str = "",
+    ) -> ValidationReport:
+        """Run the full validation pipeline and return a :class:`~dqf.report.ValidationReport`.
+
+        Steps:
+
+        1. Materialise both datasets (universe left join variables).
+        2. Run dataset-level invariant checks (PK uniqueness, join integrity).
+        3. Auto-resolve variables via *builder_pipeline* if ``self.variables`` is empty
+           and a pipeline is provided.
+        4. Dispatch each variable to its check pipeline via *resolver*.
+        5. Run each pipeline; attach results to the corresponding
+           :class:`~dqf.variable.Variable`.
+        6. Assemble and return the :class:`~dqf.report.ValidationReport`.
+
+        Parameters
+        ----------
+        resolver:
+            Registry that maps each :class:`~dqf.variable.Variable` to a
+            :class:`~dqf.checks.pipeline.CheckPipeline`.
+        builder_pipeline:
+            Optional metadata builder pipeline.  If ``self.variables`` is empty
+            and *builder_pipeline* is provided, :meth:`resolve_variables` is
+            called automatically before dispatching checks.
+        dataset_name:
+            Human-readable identifier stored in the report.
+        """
+        # 1. Materialise
+        self.materialise()
+
+        # 2. Dataset-level invariant checks
+        pk_result = self.validate_pk_uniqueness()
+        join_result = self.validate_join_integrity()
+
+        # 3. Auto-resolve variables when needed
+        if not self.variables and builder_pipeline is not None:
+            self.resolve_variables(builder_pipeline)
+
+        # 4. Get per-variable pipelines
+        pipelines = resolver.resolve_all(self)
+
+        # 5. Run checks and attach results
+        for variable in self.variables:
+            pipeline = pipelines[variable.name]
+            results = pipeline.run(self, variable)
+            for result in results:
+                variable.attach_result(result)
+
+        # 6. Assemble report
+        return ValidationReport(
+            dataset_name=dataset_name,
+            run_timestamp=datetime.now(timezone.utc),
+            dataset_level_checks=[pk_result, join_result],
+            variable_reports={v.name: list(v.check_results) for v in self.variables},
+        )

@@ -45,8 +45,8 @@ _TARGET_CATEGORICAL_SQL = "SELECT entity_id, ts, label FROM variables_cat"
 def _agg_sql(check: object, variable_name: str, time_field: str, source_sql: str) -> str:
     """Compute the aggregation SQL that a longitudinal check will issue at runtime."""
     assert hasattr(check, "aggregation_sql")
-    template = check.aggregation_sql(variable_name, time_field, "month")  # type: ignore[attr-defined]
-    return template.format(source=source_sql)
+    template = check.aggregation_sql(variable_name, time_field, "month")
+    return str(template.format(source=source_sql))
 
 
 def _make_dataset(

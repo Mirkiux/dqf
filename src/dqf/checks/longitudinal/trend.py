@@ -69,10 +69,10 @@ class TrendCheck(BaseLongitudinalCheck):
     def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
         return (
             f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
-            f" AVG(CAST({variable_name} AS DOUBLE)) AS metric,"
-            f" COUNT({variable_name}) AS n"
-            f" FROM ({{source}}) _vd"
-            f" GROUP BY 1 ORDER BY 1"
+            + f" AVG(CAST({variable_name} AS DOUBLE)) AS metric,"
+            + f" COUNT({variable_name}) AS n"
+            + " FROM ({source}) _vd"
+            + " GROUP BY 1 ORDER BY 1"
         )
 
     def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:

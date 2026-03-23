@@ -346,8 +346,8 @@ Plans 10, 11, and 13 are parallelizable after Plan 9.
 | 8 | Dataset Classes and Materialisation | `plan-08-datasets` | #8 | ✅ Merged |
 | 9 | Validation Orchestration (`run_validation`) | `plan-09-run-validation` | #9 | ✅ Merged |
 | 10 | Concrete Cross-Sectional Checks | `plan-10-cross-sectional-checks` | #10 | ✅ Merged |
-| 11 | Concrete Longitudinal Checks | — | — | ⏳ Pending |
-| 12 | ValidationReport and Rendering | — | — | ⏳ Pending |
-| 13 | Default Check Suite Configuration | — | — | ⏳ Pending |
+| 11 | Concrete Longitudinal Checks | `plan-11-longitudinal-checks` | #11 | ✅ Merged |
+| 12 | ValidationReport and Rendering | `plan-12-validation-report` | #12 | ✅ Merged |
+| 13 | Default Check Suite Configuration | `plan-13-default-suites` | — | ⏳ Pending |
 | 14 | Integration Tests and Worked Examples | — | — | ⏳ Pending |
 | 15 | Packaging and Documentation | — | — | ⏳ Pending |

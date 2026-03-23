@@ -16,6 +16,7 @@ from dqf.adapters import (
 from dqf.checks import BaseCheck, BaseCrossSectionalCheck, BaseLongitudinalCheck, CheckPipeline
 from dqf.datasets import UniverseDataset, VariablesDataset
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
+from dqf.report import ValidationReport
 from dqf.resolver import CheckSuiteResolver
 from dqf.results import CheckResult, ValidationResult
 from dqf.variable import Variable
@@ -39,6 +40,7 @@ __all__ = [
     "ValidationStatus",
     "VariableRole",
     "CheckResult",
+    "ValidationReport",
     "ValidationResult",
     "Variable",
 ]

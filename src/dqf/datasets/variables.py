@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 import pandas as pd
 
 from dqf.adapters.base import DataSourceAdapter
 from dqf.datasets.universe import UniverseDataset
-from dqf.enums import DataType
+from dqf.enums import DataType, ValidationStatus
 from dqf.metadata.base import MetadataBuilderPipeline
+from dqf.report import ValidationReport
+from dqf.resolver import CheckSuiteResolver
 from dqf.results import ValidationResult
 from dqf.variable import Variable
 
@@ -69,6 +73,8 @@ class VariablesDataset:
         self._raw_variables_data: pd.DataFrame | None = None
         self.pk_validation: ValidationResult | None = None
         self.join_validation: ValidationResult | None = None
+        self.validation_report: ValidationReport | None = None
+        self.validation_state: ValidationStatus = ValidationStatus.PENDING
 
     # ------------------------------------------------------------------
     # Materialisation
@@ -220,3 +226,83 @@ class VariablesDataset:
             resolved.append(v)
         self.variables = resolved
         return resolved
+
+    # ------------------------------------------------------------------
+    # Validation orchestration
+    # ------------------------------------------------------------------
+
+    def run_validation(
+        self,
+        check_suite_resolver: CheckSuiteResolver,
+        metadata_builder_pipeline: MetadataBuilderPipeline | None = None,
+        dataset_name: str = "",
+        force: bool = False,
+    ) -> ValidationReport:
+        """Run the full validation pipeline and return a :class:`~dqf.report.ValidationReport`.
+
+        If ``self.validation_state`` is already ``PASSED`` and *force* is
+        ``False``, the cached :attr:`validation_report` is returned immediately
+        without re-executing any queries or checks.
+
+        Steps:
+
+        1. Materialise both datasets (universe left join variables).
+        2. Run dataset-level invariant checks (PK uniqueness, join integrity).
+        3. Auto-resolve variables via *metadata_builder_pipeline* if
+           ``self.variables`` is empty and a pipeline is provided.
+        4. Dispatch each variable to its check pipeline via *check_suite_resolver*.
+        5. Run each pipeline; attach results to the corresponding
+           :class:`~dqf.variable.Variable`.
+        6. Assemble, store, and return the :class:`~dqf.report.ValidationReport`.
+
+        Parameters
+        ----------
+        check_suite_resolver:
+            Registry that maps each :class:`~dqf.variable.Variable` to a
+            :class:`~dqf.checks.pipeline.CheckPipeline`.
+        metadata_builder_pipeline:
+            Optional metadata builder pipeline.  If ``self.variables`` is empty
+            and *metadata_builder_pipeline* is provided, :meth:`resolve_variables`
+            is called automatically before dispatching checks.
+        dataset_name:
+            Human-readable identifier stored in the report.
+        force:
+            When ``True``, re-runs validation even if ``self.validation_state``
+            is already ``PASSED``.  Also forces re-materialisation of both
+            datasets.
+        """
+        if self.validation_state == ValidationStatus.PASSED and not force:
+            assert self.validation_report is not None
+            return self.validation_report
+
+        # 1. Materialise
+        self.materialise(force=force)
+
+        # 2. Dataset-level invariant checks
+        pk_result = self.validate_pk_uniqueness()
+        join_result = self.validate_join_integrity()
+
+        # 3. Auto-resolve variables when needed
+        if not self.variables and metadata_builder_pipeline is not None:
+            self.resolve_variables(metadata_builder_pipeline)
+
+        # 4. Get per-variable pipelines
+        pipelines = check_suite_resolver.resolve_all(self)
+
+        # 5. Run checks and attach results
+        for variable in self.variables:
+            pipeline = pipelines[variable.name]
+            results = pipeline.run(self, variable)
+            for result in results:
+                variable.attach_result(result)
+
+        # 6. Assemble, store, and return
+        report = ValidationReport(
+            dataset_name=dataset_name,
+            run_timestamp=datetime.now(timezone.utc),
+            dataset_level_checks=[pk_result, join_result],
+            variable_reports={v.name: list(v.check_results) for v in self.variables},
+        )
+        self.validation_report = report
+        self.validation_state = report.overall_status
+        return report

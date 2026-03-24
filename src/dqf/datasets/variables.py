@@ -7,7 +7,7 @@ import pandas as pd
 from dqf.adapters.base import DataSourceAdapter
 from dqf.datasets.universe import UniverseDataset
 from dqf.enums import DataType, ValidationStatus
-from dqf.metadata.base import MetadataBuilderPipeline
+from dqf.metadata.resolver import MetadataResolver
 from dqf.report import ValidationReport
 from dqf.resolver import CheckSuiteResolver
 from dqf.results import ValidationResult
@@ -207,12 +207,14 @@ class VariablesDataset:
 
     def resolve_variables(
         self,
-        builder_pipeline: MetadataBuilderPipeline,
+        metadata_resolver: MetadataResolver,
     ) -> list[Variable]:
         """Create and profile one :class:`~dqf.variable.Variable` per data column.
 
-        Framework columns (``__vd_matched__``) are excluded.  Each variable
-        is profiled by running its series through *builder_pipeline*.
+        Framework columns (``__vd_matched__``) are excluded.  For each column
+        the resolver selects the appropriate
+        :class:`~dqf.metadata.base.MetadataBuilderPipeline` based on the
+        variable's role and dtype before calling ``profile()``.
 
         The resolved list is also stored on ``self.variables``.
         """
@@ -222,7 +224,7 @@ class VariablesDataset:
             if col == _VD_MATCHED:
                 continue
             v = Variable(name=col, dtype=DataType.TEXT)
-            builder_pipeline.profile(self, v)
+            metadata_resolver.resolve(v).profile(self, v)
             resolved.append(v)
         self.variables = resolved
         return resolved
@@ -234,7 +236,7 @@ class VariablesDataset:
     def run_validation(
         self,
         check_suite_resolver: CheckSuiteResolver,
-        metadata_builder_pipeline: MetadataBuilderPipeline | None = None,
+        metadata_resolver: MetadataResolver | None = None,
         dataset_name: str = "",
         force: bool = False,
     ) -> ValidationReport:
@@ -248,8 +250,8 @@ class VariablesDataset:
 
         1. Materialise both datasets (universe left join variables).
         2. Run dataset-level invariant checks (PK uniqueness, join integrity).
-        3. Auto-resolve variables via *metadata_builder_pipeline* if
-           ``self.variables`` is empty and a pipeline is provided.
+        3. Auto-resolve variables via *metadata_resolver* if
+           ``self.variables`` is empty and a resolver is provided.
         4. Dispatch each variable to its check pipeline via *check_suite_resolver*.
         5. Run each pipeline; attach results to the corresponding
            :class:`~dqf.variable.Variable`.
@@ -260,10 +262,11 @@ class VariablesDataset:
         check_suite_resolver:
             Registry that maps each :class:`~dqf.variable.Variable` to a
             :class:`~dqf.checks.pipeline.CheckPipeline`.
-        metadata_builder_pipeline:
-            Optional metadata builder pipeline.  If ``self.variables`` is empty
-            and *metadata_builder_pipeline* is provided, :meth:`resolve_variables`
-            is called automatically before dispatching checks.
+        metadata_resolver:
+            Optional :class:`~dqf.metadata.resolver.MetadataResolver`.  If
+            ``self.variables`` is empty and *metadata_resolver* is provided,
+            :meth:`resolve_variables` is called automatically before
+            dispatching checks.
         dataset_name:
             Human-readable identifier stored in the report.
         force:
@@ -283,8 +286,8 @@ class VariablesDataset:
         join_result = self.validate_join_integrity()
 
         # 3. Auto-resolve variables when needed
-        if not self.variables and metadata_builder_pipeline is not None:
-            self.resolve_variables(metadata_builder_pipeline)
+        if not self.variables and metadata_resolver is not None:
+            self.resolve_variables(metadata_resolver)
 
         # 4. Get per-variable pipelines
         pipelines = check_suite_resolver.resolve_all(self)

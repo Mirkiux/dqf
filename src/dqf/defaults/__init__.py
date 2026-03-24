@@ -3,6 +3,7 @@
 from dqf.defaults.metadata import (
     boolean_metadata_pipeline,
     build_default_metadata_pipeline,
+    build_default_metadata_resolver,
     catch_all_metadata_pipeline,
     categorical_metadata_pipeline,
     identifier_metadata_pipeline,
@@ -45,6 +46,7 @@ __all__ = [
     "catch_all_pipeline",
     # metadata pipelines
     "build_default_metadata_pipeline",
+    "build_default_metadata_resolver",
     "identifier_metadata_pipeline",
     "target_metadata_pipeline",
     "numeric_continuous_metadata_pipeline",

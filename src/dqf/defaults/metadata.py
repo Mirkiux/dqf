@@ -46,6 +46,7 @@ from dqf.metadata.builders.distribution_builder import DistributionShapeBuilder
 from dqf.metadata.builders.dtype_builder import StorageDtypeBuilder
 from dqf.metadata.builders.nullability_builder import NullabilityProfileBuilder
 from dqf.metadata.builders.semantic_builder import SemanticTypeInferenceBuilder
+from dqf.metadata.resolver import MetadataResolver
 
 if TYPE_CHECKING:
     from dqf.variable import Variable
@@ -273,3 +274,126 @@ def build_default_metadata_pipeline(
         return boolean_metadata_pipeline()
 
     return catch_all_metadata_pipeline(low_cardinality_threshold)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Resolver factory
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def build_default_metadata_resolver(
+    high_cardinality_threshold: int = 50,
+    low_cardinality_threshold: int = 20,
+) -> MetadataResolver:
+    """Return a pre-configured :class:`~dqf.metadata.resolver.MetadataResolver`.
+
+    Registers one rule per role/dtype in the same priority order used by
+    :func:`~dqf.defaults.suites.build_default_resolver`, so the two resolvers
+    stay aligned when used together.
+
+    Priority order
+    --------------
+    30  IDENTIFIER role      → :func:`identifier_metadata_pipeline`
+    25  TARGET role          → :func:`target_metadata_pipeline`
+    15  NUMERIC_CONTINUOUS   → :func:`numeric_continuous_metadata_pipeline`
+    10  NUMERIC_DISCRETE     → :func:`numeric_discrete_metadata_pipeline`
+     7  CATEGORICAL          → :func:`categorical_metadata_pipeline`
+     5  BOOLEAN              → :func:`boolean_metadata_pipeline`
+     0  catch-all            → :func:`catch_all_metadata_pipeline`
+
+    Parameters
+    ----------
+    high_cardinality_threshold:
+        Passed to ``NUMERIC_DISCRETE`` and ``CATEGORICAL`` pipelines.
+        Default ``50``.
+    low_cardinality_threshold:
+        Passed to ``TARGET`` and catch-all pipelines for semantic type
+        inference.  Default ``20``.
+
+    Returns
+    -------
+    MetadataResolver
+        A resolver ready to call ``.resolve(variable)`` or
+        ``.resolve_all(dataset)``.
+
+    Examples
+    --------
+    Basic usage::
+
+        resolver = build_default_metadata_resolver()
+        dataset.resolve_variables(resolver)
+
+    Customised thresholds::
+
+        resolver = build_default_metadata_resolver(
+            high_cardinality_threshold=20,
+            low_cardinality_threshold=10,
+        )
+
+    Domain-specific override at higher priority::
+
+        resolver = build_default_metadata_resolver()
+        resolver.register(
+            predicate=lambda v: v.name == "credit_score",
+            pipeline_factory=lambda: MetadataBuilderPipeline([
+                ("nullability", NullabilityProfileBuilder()),
+                ("distribution", DistributionShapeBuilder()),
+            ]),
+            priority=50,
+        )
+    """
+    resolver = MetadataResolver()
+
+    _hct = high_cardinality_threshold
+    _lct = low_cardinality_threshold
+
+    # Priority 30 — IDENTIFIER role
+    resolver.register(
+        predicate=lambda v: v.role == VariableRole.IDENTIFIER,
+        pipeline_factory=identifier_metadata_pipeline,
+        priority=30,
+    )
+
+    # Priority 25 — TARGET role
+    resolver.register(
+        predicate=lambda v: v.role == VariableRole.TARGET,
+        pipeline_factory=lambda: target_metadata_pipeline(_lct),
+        priority=25,
+    )
+
+    # Priority 15 — NUMERIC_CONTINUOUS feature
+    resolver.register(
+        predicate=lambda v: v.dtype == DataType.NUMERIC_CONTINUOUS,
+        pipeline_factory=numeric_continuous_metadata_pipeline,
+        priority=15,
+    )
+
+    # Priority 10 — NUMERIC_DISCRETE feature
+    resolver.register(
+        predicate=lambda v: v.dtype == DataType.NUMERIC_DISCRETE,
+        pipeline_factory=lambda: numeric_discrete_metadata_pipeline(_hct),
+        priority=10,
+    )
+
+    # Priority 7 — CATEGORICAL feature
+    resolver.register(
+        predicate=lambda v: v.dtype == DataType.CATEGORICAL,
+        pipeline_factory=lambda: categorical_metadata_pipeline(_hct),
+        priority=7,
+    )
+
+    # Priority 5 — BOOLEAN feature
+    resolver.register(
+        predicate=lambda v: v.dtype == DataType.BOOLEAN,
+        pipeline_factory=boolean_metadata_pipeline,
+        priority=5,
+    )
+
+    # Priority 0 — catch-all
+    resolver.register(
+        predicate=lambda v: True,
+        pipeline_factory=lambda: catch_all_metadata_pipeline(_lct),
+        priority=0,
+    )
+
+    return resolver

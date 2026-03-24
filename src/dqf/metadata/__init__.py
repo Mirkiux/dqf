@@ -6,10 +6,12 @@ from dqf.metadata.builders import (
     SemanticTypeInferenceBuilder,
     StorageDtypeBuilder,
 )
+from dqf.metadata.resolver import MetadataResolver
 
 __all__ = [
     "BaseMetadataBuilder",
     "MetadataBuilderPipeline",
+    "MetadataResolver",
     "CardinalityBuilder",
     "DistributionShapeBuilder",
     "NullabilityProfileBuilder",

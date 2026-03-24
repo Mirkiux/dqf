@@ -223,7 +223,8 @@ class VariablesDataset:
         for col in data.columns:
             if col == _VD_MATCHED:
                 continue
-            v = Variable(name=col, dtype=DataType.TEXT)
+            v = Variable(name=col, dtype=DataType.PENDING)
+            v.infer_dtype(data[col])
             metadata_resolver.resolve(v).profile(self, v)
             resolved.append(v)
         self.variables = resolved

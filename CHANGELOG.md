@@ -11,6 +11,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.2] — 2026-03-24
+
+### Added
+
+- `MetadataResolver` (`dqf.metadata.resolver`) — predicate+priority registry that maps variables to `MetadataBuilderPipeline` instances, mirroring `CheckSuiteResolver` for the metadata layer.
+- `build_default_metadata_resolver()` (`dqf.defaults.metadata`) — batteries-included `MetadataResolver` with rules at the same priorities as `build_default_resolver` (IDENTIFIER→30, TARGET→25, NUMERIC_CONTINUOUS→15, NUMERIC_DISCRETE→10, CATEGORICAL→7, BOOLEAN→5, catch-all→0).
+- `defaults/metadata.py` — seven named pipeline factory functions (`identifier_metadata_pipeline`, `target_metadata_pipeline`, `numeric_continuous_metadata_pipeline`, `numeric_discrete_metadata_pipeline`, `categorical_metadata_pipeline`, `boolean_metadata_pipeline`, `catch_all_metadata_pipeline`) and `build_default_metadata_pipeline(variable)` for direct per-variable dispatch.
+
+### Changed
+
+- `VariablesDataset.resolve_variables()` now accepts a `MetadataResolver` instead of a bare `MetadataBuilderPipeline`, enabling per-variable pipeline dispatch.
+- `VariablesDataset.run_validation()` parameter renamed `metadata_builder_pipeline` → `metadata_resolver` (accepts `MetadataResolver | None`).
+- `MetadataResolver` and `build_default_metadata_resolver` exported from the `dqf` top-level namespace.
+
+---
+
 ## [0.1.1] — 2026-03-24
 
 ### Added

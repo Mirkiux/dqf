@@ -38,7 +38,7 @@ from dqf.checks import (
     UniquenessCheck,
 )
 from dqf.datasets import UniverseDataset, VariablesDataset
-from dqf.defaults import build_default_resolver
+from dqf.defaults import build_default_metadata_pipeline, build_default_resolver
 from dqf.enums import DataType, EngineType, Severity, ValidationStatus, VariableRole
 from dqf.report import ValidationReport
 from dqf.resolver import CheckSuiteResolver
@@ -47,6 +47,7 @@ from dqf.variable import Variable
 
 __all__ = [
     "build_default_resolver",
+    "build_default_metadata_pipeline",
     "BaseCheck",
     "BaseCrossSectionalCheck",
     "BaseLongitudinalCheck",

@@ -9,3 +9,5 @@
 ::: dqf.DatabricksAdapter
 
 ::: dqf.SparkAdapter
+
+::: dqf.DatabricksNotebookAdapter

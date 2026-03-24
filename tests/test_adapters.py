@@ -12,6 +12,7 @@ import sqlalchemy
 
 from dqf.adapters import (
     DatabricksAdapter,
+    DatabricksNotebookAdapter,
     DataSourceAdapter,
     MockAdapter,
     SparkAdapter,
@@ -172,3 +173,74 @@ class TestSparkAdapter:
         adapter = SparkAdapter(_FakeSpark())
         result = adapter.execute("SELECT col FROM t")
         assert result.equals(expected)
+
+
+# ---------------------------------------------------------------------------
+# TestDatabricksNotebookAdapter
+# ---------------------------------------------------------------------------
+
+
+class TestDatabricksNotebookAdapter:
+    def test_engine_type_is_spark(self) -> None:
+        adapter = DatabricksNotebookAdapter()
+        assert adapter.engine_type() == EngineType.SPARK
+
+    def test_spark_is_none_before_first_execute(self) -> None:
+        adapter = DatabricksNotebookAdapter()
+        assert adapter._spark is None
+
+    def test_execute_uses_spark_from_main_namespace(self) -> None:
+        expected = pd.DataFrame({"col": [1, 2, 3]})
+
+        class _FakeResult:
+            def toPandas(self) -> pd.DataFrame:
+                return expected
+
+        class _FakeSpark:
+            def sql(self, query: str) -> _FakeResult:
+                return _FakeResult()
+
+        fake_main = mock.MagicMock()
+        fake_main.spark = _FakeSpark()
+
+        with mock.patch.dict(sys.modules, {"__main__": fake_main}):
+            adapter = DatabricksNotebookAdapter()
+            result = adapter.execute("SELECT col FROM t")
+
+        assert result.equals(expected)
+
+    def test_spark_is_cached_after_first_execute(self) -> None:
+        class _FakeSpark:
+            def sql(self, query: str) -> Any:
+                result = mock.MagicMock()
+                result.toPandas.return_value = pd.DataFrame({"x": [1]})
+                return result
+
+        fake_spark = _FakeSpark()
+        fake_main = mock.MagicMock()
+        fake_main.spark = fake_spark
+
+        with mock.patch.dict(sys.modules, {"__main__": fake_main}):
+            adapter = DatabricksNotebookAdapter()
+            adapter.execute("SELECT 1")
+            assert adapter._spark is fake_spark
+            adapter.execute("SELECT 1")  # second call should use cache, not re-resolve
+
+    def test_raises_runtime_error_when_spark_not_in_namespace(self) -> None:
+        fake_main = mock.MagicMock(spec=[])  # no 'spark' attribute
+
+        with (
+            mock.patch.dict(sys.modules, {"__main__": fake_main}),
+            pytest.raises(RuntimeError, match="DatabricksNotebookAdapter"),
+        ):
+            DatabricksNotebookAdapter().execute("SELECT 1")
+
+    def test_raises_runtime_error_when_main_module_missing(self) -> None:
+        patched = dict(sys.modules)
+        patched.pop("__main__", None)
+
+        with (
+            mock.patch.object(sys, "modules", patched),
+            pytest.raises(RuntimeError, match="DatabricksNotebookAdapter"),
+        ):
+            DatabricksNotebookAdapter().execute("SELECT 1")

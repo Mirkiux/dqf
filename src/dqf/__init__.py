@@ -8,6 +8,7 @@ __version__ = "0.1.0"
 
 from dqf.adapters import (
     DatabricksAdapter,
+    DatabricksNotebookAdapter,
     DataSourceAdapter,
     MockAdapter,
     SparkAdapter,
@@ -55,6 +56,7 @@ __all__ = [
     "VariablesDataset",
     "DataSourceAdapter",
     "DatabricksAdapter",
+    "DatabricksNotebookAdapter",
     "MockAdapter",
     "SparkAdapter",
     "SQLAlchemyAdapter",

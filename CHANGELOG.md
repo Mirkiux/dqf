@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.1] — 2026-03-24
+
+### Added
+
+- `DatabricksNotebookAdapter` — zero-argument adapter for Databricks notebook environments where `spark` is pre-injected by the runtime. Discovers the session lazily from `sys.modules['__main__']`; raises a clear `RuntimeError` when used outside a notebook context.
+- `examples/05_databricks_notebook.ipynb` — end-to-end notebook example using `DatabricksNotebookAdapter` with a lending dataset scenario (feature validation + target drift monitoring).
+
+---
+
 ## [0.1.0] — 2026-03-23
 
 Initial release. Full implementation of the composable data quality validation framework.

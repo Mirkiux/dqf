@@ -44,14 +44,17 @@ class Variable:
         Inference priority
         ------------------
         1. Boolean storage dtype → ``BOOLEAN``
-        2. Numeric storage dtype → ``NUMERIC_CONTINUOUS``
-        3. Datetime storage dtype → ``DATETIME``
-        4. Object/string: ≥95 % of non-null values coerce to numeric
-           → ``NUMERIC_CONTINUOUS``
-        5. Object/string: ≥95 % of non-null values coerce to datetime
-           → ``DATETIME``
-        6. Distinct non-null values ≤ *low_cardinality_threshold*
+        2. Distinct non-null values ≤ *low_cardinality_threshold*
            → ``CATEGORICAL``
+           (checked before numeric/datetime so that a numeric column with few
+           distinct values — e.g. a 0/1 flag stored as int — is classified as
+           categorical rather than continuous)
+        3. Numeric storage dtype → ``NUMERIC_CONTINUOUS``
+        4. Datetime storage dtype → ``DATETIME``
+        5. Object/string: ≥95 % of non-null values coerce to numeric
+           → ``NUMERIC_CONTINUOUS``
+        6. Object/string: ≥95 % of non-null values coerce to datetime
+           → ``DATETIME``
         7. Default → ``TEXT``
 
         Parameters
@@ -59,14 +62,20 @@ class Variable:
         series:
             The pandas Series for this column in the materialised dataset.
         low_cardinality_threshold:
-            Maximum number of distinct non-null values for a string column to
-            be classified as ``CATEGORICAL``.  Default ``20``.
+            Maximum number of distinct non-null values for a column to be
+            classified as ``CATEGORICAL``.  Applies to all storage dtypes,
+            not only strings.  Default ``20``.
         """
         if self.dtype != DataType.PENDING:
             return
 
         if pd.api.types.is_bool_dtype(series):
             self.dtype = DataType.BOOLEAN
+            return
+
+        non_null = series.dropna()
+        if non_null.nunique() <= low_cardinality_threshold:
+            self.dtype = DataType.CATEGORICAL
             return
 
         if pd.api.types.is_numeric_dtype(series):
@@ -77,7 +86,6 @@ class Variable:
             self.dtype = DataType.DATETIME
             return
 
-        non_null = series.dropna()
         if len(non_null) > 0:
             if pd.to_numeric(non_null, errors="coerce").notna().mean() >= _COERCE_THRESHOLD:
                 self.dtype = DataType.NUMERIC_CONTINUOUS
@@ -85,10 +93,6 @@ class Variable:
 
             if pd.to_datetime(non_null, errors="coerce").notna().mean() >= _COERCE_THRESHOLD:
                 self.dtype = DataType.DATETIME
-                return
-
-            if non_null.nunique() <= low_cardinality_threshold:
-                self.dtype = DataType.CATEGORICAL
                 return
 
         self.dtype = DataType.TEXT

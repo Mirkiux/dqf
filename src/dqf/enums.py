@@ -4,8 +4,15 @@ from enum import Enum
 class DataType(Enum):
     """Semantic type of a variable. Richer than storage dtype — a varchar column
     storing numeric values should be classified as NUMERIC_CONTINUOUS or
-    NUMERIC_DISCRETE after semantic inference, not as TEXT."""
+    NUMERIC_DISCRETE after semantic inference, not as TEXT.
 
+    ``PENDING`` is a sentinel used for auto-resolved variables whose dtype has
+    not yet been inferred.  It is replaced by a concrete type after
+    :meth:`~dqf.variable.Variable.infer_dtype` runs.  A variable should never
+    remain ``PENDING`` after ``resolve_variables()`` completes.
+    """
+
+    PENDING = "pending"
     NUMERIC_CONTINUOUS = "numeric_continuous"
     NUMERIC_DISCRETE = "numeric_discrete"
     CATEGORICAL = "categorical"

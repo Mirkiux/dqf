@@ -3,8 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+import pandas as pd
+
 from dqf.enums import DataType, Severity, ValidationStatus, VariableRole
 from dqf.results import CheckResult
+
+_COERCE_THRESHOLD = 0.95
 
 
 @dataclass
@@ -26,6 +30,68 @@ class Variable:
     metadata: dict[str, Any] = field(default_factory=dict)
     status: ValidationStatus = field(default=ValidationStatus.PENDING)
     check_results: list[CheckResult] = field(default_factory=list)
+
+    def infer_dtype(
+        self,
+        series: pd.Series,
+        low_cardinality_threshold: int = 20,
+    ) -> None:
+        """Infer and set the semantic :class:`~dqf.enums.DataType` from *series*.
+
+        Only acts when ``self.dtype`` is ``DataType.PENDING`` — a pre-declared
+        dtype is never overwritten.
+
+        Inference priority
+        ------------------
+        1. Boolean storage dtype → ``BOOLEAN``
+        2. Numeric storage dtype → ``NUMERIC_CONTINUOUS``
+        3. Datetime storage dtype → ``DATETIME``
+        4. Object/string: ≥95 % of non-null values coerce to numeric
+           → ``NUMERIC_CONTINUOUS``
+        5. Object/string: ≥95 % of non-null values coerce to datetime
+           → ``DATETIME``
+        6. Distinct non-null values ≤ *low_cardinality_threshold*
+           → ``CATEGORICAL``
+        7. Default → ``TEXT``
+
+        Parameters
+        ----------
+        series:
+            The pandas Series for this column in the materialised dataset.
+        low_cardinality_threshold:
+            Maximum number of distinct non-null values for a string column to
+            be classified as ``CATEGORICAL``.  Default ``20``.
+        """
+        if self.dtype != DataType.PENDING:
+            return
+
+        if pd.api.types.is_bool_dtype(series):
+            self.dtype = DataType.BOOLEAN
+            return
+
+        if pd.api.types.is_numeric_dtype(series):
+            self.dtype = DataType.NUMERIC_CONTINUOUS
+            return
+
+        if pd.api.types.is_datetime64_any_dtype(series):
+            self.dtype = DataType.DATETIME
+            return
+
+        non_null = series.dropna()
+        if len(non_null) > 0:
+            if pd.to_numeric(non_null, errors="coerce").notna().mean() >= _COERCE_THRESHOLD:
+                self.dtype = DataType.NUMERIC_CONTINUOUS
+                return
+
+            if pd.to_datetime(non_null, errors="coerce").notna().mean() >= _COERCE_THRESHOLD:
+                self.dtype = DataType.DATETIME
+                return
+
+            if non_null.nunique() <= low_cardinality_threshold:
+                self.dtype = DataType.CATEGORICAL
+                return
+
+        self.dtype = DataType.TEXT
 
     def attach_result(self, result: CheckResult) -> None:
         """Append a CheckResult and recompute status.

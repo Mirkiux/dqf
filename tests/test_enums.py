@@ -5,6 +5,7 @@ class TestDataType:
     def test_all_members_exist(self) -> None:
         members = {e.value for e in DataType}
         assert members == {
+            "pending",
             "numeric_continuous",
             "numeric_discrete",
             "categorical",

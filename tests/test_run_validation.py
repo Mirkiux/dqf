@@ -13,6 +13,7 @@ from dqf.datasets.universe import UniverseDataset
 from dqf.datasets.variables import VariablesDataset
 from dqf.enums import DataType, Severity, ValidationStatus
 from dqf.metadata.base import BaseMetadataBuilder, MetadataBuilderPipeline
+from dqf.metadata.resolver import MetadataResolver
 from dqf.report import ValidationReport
 from dqf.resolver import CheckSuiteResolver
 from dqf.results import CheckResult
@@ -332,10 +333,18 @@ class TestRunValidationOverallStatus:
 
 
 class TestRunValidationAutoResolveVariables:
+    def _make_nop_resolver(self) -> MetadataResolver:
+        resolver = MetadataResolver()
+        resolver.register(
+            predicate=lambda v: True,
+            pipeline_factory=lambda: MetadataBuilderPipeline([("nop", NopBuilder())]),
+            priority=0,
+        )
+        return resolver
+
     def test_variables_auto_resolved_when_empty(self) -> None:
         ds = make_dataset()
-        builder = MetadataBuilderPipeline([("nop", NopBuilder())])
-        ds.run_validation(make_resolver(), metadata_builder_pipeline=builder)
+        ds.run_validation(make_resolver(), metadata_resolver=self._make_nop_resolver())
         # universe has entity_id; variables has entity_id + score + category
         # joined result has entity_id + score + category (+ __vd_matched__ excluded)
         assert len(ds.variables) > 0
@@ -345,13 +354,12 @@ class TestRunValidationAutoResolveVariables:
         ds = make_dataset()
         pre_set = [Variable(name="score", dtype=DataType.NUMERIC_CONTINUOUS)]
         ds.variables = pre_set
-        builder = MetadataBuilderPipeline([("nop", NopBuilder())])
-        ds.run_validation(make_resolver(), metadata_builder_pipeline=builder)
+        ds.run_validation(make_resolver(), metadata_resolver=self._make_nop_resolver())
         assert len(ds.variables) == 1
 
-    def test_no_builder_pipeline_and_empty_variables_produces_empty_report(self) -> None:
+    def test_no_metadata_resolver_and_empty_variables_produces_empty_report(self) -> None:
         ds = make_dataset()
-        # variables is empty, no builder_pipeline → no variables resolved
+        # variables is empty, no metadata_resolver → no variables resolved
         report = ds.run_validation(CheckSuiteResolver())
         assert report.variable_results == {}
 

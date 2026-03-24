@@ -1,8 +1,9 @@
-"""Example 3 — Custom resolver rules on top of the default suite.
+"""Example 3 — Custom check and metadata resolver rules on top of the defaults.
 
-Demonstrates how to extend build_default_resolver with project-specific
-rules.  Custom rules registered at a higher priority than the built-in
-ones will take precedence for matching variables.
+Demonstrates how to extend both build_default_resolver and
+build_default_metadata_resolver with project-specific rules.  Custom rules
+registered at a higher priority than the built-in ones take precedence for
+matching variables.
 """
 
 from __future__ import annotations
@@ -12,6 +13,9 @@ import pandas as pd
 import dqf
 from dqf.checks.cross_sectional.range_check import RangeCheck
 from dqf.checks.pipeline import CheckPipeline
+from dqf.metadata.base import MetadataBuilderPipeline
+from dqf.metadata.builders.distribution_builder import DistributionShapeBuilder
+from dqf.metadata.builders.nullability_builder import NullabilityProfileBuilder
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1.  SQL strings and DataFrames
@@ -31,7 +35,28 @@ variables_df = pd.DataFrame(
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 2.  Build the default resolver and add domain-specific rules
+# 2.  Build the default metadata resolver and add domain-specific profiling
+#
+#  The default resolver applies dtype-appropriate builders.  Here we override
+#  credit_score with a richer pipeline (nullability + full distribution shape)
+#  at priority 50, which beats the default NUMERIC_CONTINUOUS rule at 15.
+# ──────────────────────────────────────────────────────────────────────────────
+
+metadata_resolver = dqf.build_default_metadata_resolver(high_cardinality_threshold=10)
+
+metadata_resolver.register(
+    predicate=lambda v: v.name == "credit_score",
+    pipeline_factory=lambda: MetadataBuilderPipeline(
+        [
+            ("nullability", NullabilityProfileBuilder()),
+            ("distribution", DistributionShapeBuilder()),
+        ]
+    ),
+    priority=50,
+)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 3.  Build the default check resolver and add domain-specific rules
 # ──────────────────────────────────────────────────────────────────────────────
 
 resolver = dqf.build_default_resolver(null_threshold=0.05, max_categorical_cardinality=10)
@@ -55,7 +80,7 @@ resolver.register(
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3.  Wire up adapter and datasets
+# 4.  Wire up adapter and datasets
 # ──────────────────────────────────────────────────────────────────────────────
 
 adapter = dqf.MockAdapter({UNIVERSE_SQL: universe_df, VARIABLES_SQL: variables_df})
@@ -80,13 +105,20 @@ dataset = dqf.VariablesDataset(
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 4.  Run validation
+# 5.  Profile metadata then run validation
 # ──────────────────────────────────────────────────────────────────────────────
+
+dataset.resolve_variables(metadata_resolver)
+
+print("-- Variable metadata -------------------------------------------------------")
+for var in dataset.variables:
+    print(f"  {var.name:<15} {var.metadata}")
+print()
 
 report = dataset.run_validation(resolver, dataset_name="loan_features")
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 5.  Inspect results — custom rules appear as "range", default as "null_rate"
+# 6.  Inspect results — custom rules appear as "range", default as "null_rate"
 # ──────────────────────────────────────────────────────────────────────────────
 
 print(f"Overall status : {report.overall_status.value}")

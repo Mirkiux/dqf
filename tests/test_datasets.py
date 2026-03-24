@@ -7,8 +7,8 @@ import pandas as pd
 from dqf.adapters.mock_adapter import MockAdapter
 from dqf.datasets.universe import UniverseDataset
 from dqf.datasets.variables import VariablesDataset
-from dqf.metadata.base import MetadataBuilderPipeline
 from dqf.metadata.builders.dtype_builder import StorageDtypeBuilder
+from dqf.metadata.resolver import MetadataResolver
 from dqf.variable import Variable
 
 # ---------------------------------------------------------------------------
@@ -48,8 +48,16 @@ def make_variables(
     )
 
 
-def make_pipeline() -> MetadataBuilderPipeline:
-    return MetadataBuilderPipeline([("dtype", StorageDtypeBuilder())])
+def make_metadata_resolver() -> MetadataResolver:
+    from dqf.metadata.base import MetadataBuilderPipeline
+
+    resolver = MetadataResolver()
+    resolver.register(
+        predicate=lambda v: True,
+        pipeline_factory=lambda: MetadataBuilderPipeline([("dtype", StorageDtypeBuilder())]),
+        priority=0,
+    )
+    return resolver
 
 
 # ---------------------------------------------------------------------------
@@ -194,31 +202,31 @@ class TestVariablesDatasetValidation:
 class TestVariablesDatasetResolveVariables:
     def setup_method(self) -> None:
         self.vd = make_variables()
-        self.pipeline = make_pipeline()
+        self.resolver = make_metadata_resolver()
 
     def test_resolve_variables_returns_list_of_variables(self) -> None:
-        result = self.vd.resolve_variables(self.pipeline)
+        result = self.vd.resolve_variables(self.resolver)
         assert isinstance(result, list)
         assert all(isinstance(v, Variable) for v in result)
 
     def test_resolve_variables_excludes_vd_matched_column(self) -> None:
-        result = self.vd.resolve_variables(self.pipeline)
+        result = self.vd.resolve_variables(self.resolver)
         names = [v.name for v in result]
         assert "__vd_matched__" not in names
 
     def test_resolve_variables_one_variable_per_column(self) -> None:
         three_col_df = pd.DataFrame({"entity_id": [1], "a": [1], "b": [2]})
         vd = make_variables(variables_df=three_col_df)
-        result = vd.resolve_variables(self.pipeline)
+        result = vd.resolve_variables(self.resolver)
         assert len(result) == 3  # entity_id, a, b (plus __vd_matched__ excluded)
 
     def test_resolve_variables_metadata_populated_by_pipeline(self) -> None:
-        result = self.vd.resolve_variables(self.pipeline)
+        result = self.vd.resolve_variables(self.resolver)
         for v in result:
             assert "storage_dtype" in v.metadata
 
     def test_resolve_variables_stores_result_on_self(self) -> None:
-        result = self.vd.resolve_variables(self.pipeline)
+        result = self.vd.resolve_variables(self.resolver)
         assert self.vd.variables is result
 
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dqf"
-version = "0.1.4"
+version = "0.1.5"
 description = "Data Quality Framework — composable, pipeline-based data quality validation for analytical datasets"
 readme = "README.md"
 license = { file = "LICENSE" }

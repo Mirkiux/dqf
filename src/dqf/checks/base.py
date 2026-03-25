@@ -92,7 +92,7 @@ class BaseLongitudinalCheck(BaseCheck, ABC):
         in Oracle, ``strftime`` in SQLite).
         """
         return (
-            f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
+            f"SELECT CAST(DATE_TRUNC('{period}', {time_field}) AS DATE) AS period,"
             + f" AVG(CAST({variable_name} AS DOUBLE)) AS metric,"
             + f" COUNT({variable_name}) AS n"
             + " FROM ({source}) _vd"

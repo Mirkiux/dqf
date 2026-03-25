@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.3] — 2026-03-24
+
+### Added
+
+- `DataType.PENDING` — sentinel enum value that marks auto-resolved variables whose dtype has not yet been inferred. Replaced by a concrete type after `Variable.infer_dtype()` runs; never persists past `resolve_variables()`.
+- `Variable.infer_dtype(series, low_cardinality_threshold=20)` — new method that infers and sets the semantic dtype from the actual pandas Series content. No-ops when `dtype != PENDING` so pre-declared dtypes are never overwritten.
+
+### Changed
+
+- `resolve_variables()` now creates each `Variable` with `DataType.PENDING` and calls `infer_dtype()` before resolving the metadata pipeline. The `MetadataResolver` now dispatches the correct dtype-appropriate pipeline for every auto-resolved column instead of always falling through to the catch-all.
+- `infer_dtype()` inference priority: cardinality is checked in step 2 (after BOOLEAN, before any numeric or coercion check) so that a numeric column with few distinct values resolves to `CATEGORICAL` rather than `NUMERIC_CONTINUOUS`.
+
+---
+
 ## [0.1.2] — 2026-03-24
 
 ### Added

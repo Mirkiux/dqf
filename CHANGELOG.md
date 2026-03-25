@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.5] — 2026-03-25
+
+### Changed
+
+- `DataSourceAdapter` now follows the *Template Method* pattern: `execute()` is a concrete method that wraps the new abstract `engine_execute()` in a try/except block. On failure, the adapter class name and the full SQL are logged at `ERROR` level before re-raising. All adapter subclasses implement `engine_execute()` instead of `execute()`. The public `execute()` API is unchanged.
+
+---
+
 ## [0.1.4] — 2026-03-25
 
 ### Changed

@@ -6,7 +6,7 @@ import pandas as pd
 
 from dqf.adapters.base import DataSourceAdapter
 from dqf.datasets.universe import UniverseDataset
-from dqf.enums import DataType, ValidationStatus
+from dqf.enums import DataType, ValidationStatus, VariableRole
 from dqf.metadata.resolver import MetadataResolver
 from dqf.report import ValidationReport
 from dqf.resolver import CheckSuiteResolver
@@ -216,6 +216,10 @@ class VariablesDataset:
         :class:`~dqf.metadata.base.MetadataBuilderPipeline` based on the
         variable's role and dtype before calling ``profile()``.
 
+        If :attr:`~dqf.datasets.universe.UniverseDataset.target` is set on the
+        associated universe, the matching variable is automatically assigned
+        :attr:`~dqf.enums.VariableRole.TARGET` before profiling.
+
         The resolved list is also stored on ``self.variables``.
         """
         data = self.materialise()
@@ -225,6 +229,8 @@ class VariablesDataset:
                 continue
             v = Variable(name=col, dtype=DataType.PENDING)
             v.infer_dtype(data[col])
+            if col == self.universe.target:
+                v.role = VariableRole.TARGET
             metadata_resolver.resolve(v).profile(self, v)
             resolved.append(v)
         self.variables = resolved

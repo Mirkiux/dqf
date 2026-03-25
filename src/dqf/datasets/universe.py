@@ -30,6 +30,12 @@ class UniverseDataset:
         Adapter used to execute *sql*.
     time_field:
         Optional datetime column; required for longitudinal checks.
+    target:
+        Optional name of the target column for supervised models (e.g.
+        ``"churn"``, ``"price"``).  Cannot be inferred from the data, so it
+        must be declared explicitly.  When set, downstream components can
+        automatically assign :attr:`~dqf.enums.VariableRole.TARGET` to the
+        corresponding :class:`~dqf.variable.Variable`.
     """
 
     def __init__(
@@ -38,11 +44,13 @@ class UniverseDataset:
         primary_key: list[str],
         adapter: DataSourceAdapter,
         time_field: str | None = None,
+        target: str | None = None,
     ) -> None:
         self.sql = sql
         self.primary_key = primary_key
         self.adapter = adapter
         self.time_field = time_field
+        self.target = target
         self._data: pd.DataFrame | None = None
         self.pk_validation: ValidationResult | None = None
 

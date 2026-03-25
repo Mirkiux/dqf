@@ -79,7 +79,8 @@ class FakeLongitudinalCheck(BaseLongitudinalCheck):
     def severity(self) -> Severity:
         return Severity.FAILURE
 
-    def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
+    @staticmethod
+    def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         return f"SELECT {time_field}, AVG({variable_name}) FROM t GROUP BY {time_field}"
 
     def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:

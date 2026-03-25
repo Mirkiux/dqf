@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.6] — 2026-03-25
+
+### Changed
+
+- `BaseLongitudinalCheck.aggregation_sql` now wraps `DATE_TRUNC` with `CAST(... AS DATE)`, ensuring the `period` column has a consistent `DATE` type across all engines (Spark SQL returns `TIMESTAMP` from `DATE_TRUNC`; this cast normalises the output).
+
+---
+
 ## [0.1.5] — 2026-03-25
 
 ### Changed

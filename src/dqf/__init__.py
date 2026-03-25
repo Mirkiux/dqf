@@ -4,7 +4,7 @@ dqf — Data Quality Framework
 A composable, pipeline-based library for data quality validation of analytical datasets.
 """
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 from dqf.adapters import (
     DatabricksAdapter,

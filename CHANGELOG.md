@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.4] — 2026-03-25
+
+### Changed
+
+- `BaseLongitudinalCheck.aggregation_sql` is now a concrete `@staticmethod` with a default implementation (period-aggregated AVG metric + COUNT n). Checks that need a different output shape (`KSDriftCheck`, `ProportionDriftCheck`, `ChiSquaredDriftCheck`) override it; `TrendCheck`, `StructuralBreakCheck`, `SeasonalityCheck`, and `DistributionDriftCheck` now inherit the default without repeating it.
+- Added `BaseLongitudinalCheck._strip_source(source)` static helper that strips trailing whitespace and semicolons from a SQL string before it is injected as a subquery via `{source}`. Prevents runtime SQL errors when `dataset.sql` ends with `;` or `;;`.
+
+---
+
 ## [0.1.3] — 2026-03-24
 
 ### Added

@@ -88,7 +88,7 @@ class DatabricksNotebookAdapter(DataSourceAdapter):
     def __init__(self) -> None:
         self._spark: Any = None
 
-    def execute(self, sql: str) -> pd.DataFrame:
+    def engine_execute(self, sql: str) -> pd.DataFrame:
         """Execute *sql* via the notebook's pre-injected ``spark`` session.
 
         The session is resolved once and cached for the lifetime of this

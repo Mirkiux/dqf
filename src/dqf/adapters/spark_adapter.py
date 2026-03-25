@@ -19,7 +19,7 @@ class SparkAdapter(DataSourceAdapter):
     def __init__(self, spark_session: Any) -> None:
         self._spark = spark_session
 
-    def execute(self, sql: str) -> pd.DataFrame:
+    def engine_execute(self, sql: str) -> pd.DataFrame:
         result: pd.DataFrame = self._spark.sql(sql).toPandas()
         return result
 

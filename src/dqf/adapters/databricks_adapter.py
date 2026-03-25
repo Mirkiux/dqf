@@ -33,7 +33,7 @@ class DatabricksAdapter(DataSourceAdapter):
         self._catalog = catalog
         self._schema = schema
 
-    def execute(self, sql: str) -> pd.DataFrame:
+    def engine_execute(self, sql: str) -> pd.DataFrame:
         try:
             from databricks import sql as dbsql
         except ImportError as exc:

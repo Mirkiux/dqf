@@ -21,7 +21,7 @@ class MockAdapter(DataSourceAdapter):
         self._results = results
         self._call_counts: dict[str, int] = {}
 
-    def execute(self, sql: str) -> pd.DataFrame:
+    def engine_execute(self, sql: str) -> pd.DataFrame:
         self._call_counts[sql] = self._call_counts.get(sql, 0) + 1
         return self._results[sql]
 

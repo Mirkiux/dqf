@@ -34,7 +34,7 @@ class SQLAlchemyAdapter(DataSourceAdapter):
             self._engine = create_engine(self._connection_string)
         return self._engine
 
-    def execute(self, sql: str) -> pd.DataFrame:
+    def engine_execute(self, sql: str) -> pd.DataFrame:
         engine = self._get_engine()
         result: pd.DataFrame = pd.read_sql_query(sql, engine)
         return result

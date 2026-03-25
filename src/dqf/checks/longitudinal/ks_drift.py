@@ -79,7 +79,8 @@ class KSDriftCheck(BaseLongitudinalCheck):
             "period": self._period,
         }
 
-    def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
+    @staticmethod
+    def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         return (
             f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
             + f" CAST({variable_name} AS DOUBLE) AS value"
@@ -91,7 +92,7 @@ class KSDriftCheck(BaseLongitudinalCheck):
     def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
         population_size = len(dataset.universe.materialise())
         sql_template = self.aggregation_sql(variable.name, self._time_field, self._period)
-        sql = sql_template.format(source=dataset.sql)
+        sql = sql_template.format(source=self._strip_source(dataset.sql))
         df = dataset.adapter.execute(sql)
         return self._compute(df, variable, population_size)
 

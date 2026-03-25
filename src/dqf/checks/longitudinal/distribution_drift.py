@@ -77,19 +77,10 @@ class DistributionDriftCheck(BaseLongitudinalCheck):
         """Set a reference distribution from historical period-level metrics."""
         self._reference_metrics = reference_metrics
 
-    def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
-        return (
-            f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
-            + f" AVG(CAST({variable_name} AS DOUBLE)) AS metric,"
-            + f" COUNT({variable_name}) AS n"
-            + " FROM ({source}) _vd"
-            + " GROUP BY 1 ORDER BY 1"
-        )
-
     def check(self, dataset: VariablesDataset, variable: Variable) -> CheckResult:
         population_size = len(dataset.universe.materialise())
         sql_template = self.aggregation_sql(variable.name, self._time_field, self._period)
-        sql = sql_template.format(source=dataset.sql)
+        sql = sql_template.format(source=self._strip_source(dataset.sql))
         timeseries_df = dataset.adapter.execute(sql)
         return self._compute(timeseries_df, variable, population_size)
 

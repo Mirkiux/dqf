@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
@@ -63,9 +64,16 @@ class BaseLongitudinalCheck(BaseCheck, ABC):
     calling ``check()``.
     """
 
-    @abstractmethod
-    def aggregation_sql(self, variable_name: str, time_field: str, period: str) -> str:
+    @staticmethod
+    def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         """Return SQL that produces a time-indexed summary for *variable_name*.
+
+        The default implementation groups by truncated period and computes
+        ``AVG(metric)`` and ``COUNT(n)`` — suitable for any numeric time-series
+        check (trend, structural break, seasonality, PSI distribution drift).
+
+        Override in subclasses that require a different output shape, e.g.
+        per-entity rows for KS tests or per-category counts for chi-squared.
 
         Parameters
         ----------
@@ -78,9 +86,31 @@ class BaseLongitudinalCheck(BaseCheck, ABC):
 
         Notes
         -----
-        The built-in implementations use ``DATE_TRUNC(period, column)``, which is
-        supported by Databricks/Spark SQL, PostgreSQL, BigQuery, Redshift, and
-        Snowflake but is **not** part of the ANSI SQL standard.  Override this
-        method when targeting engines that use a different truncation function
-        (e.g. ``TRUNC(column, 'MM')`` in Oracle, ``strftime`` in SQLite).
+        Uses ``DATE_TRUNC(period, column)``, supported by Databricks/Spark SQL,
+        PostgreSQL, BigQuery, Redshift, and Snowflake.  Override when targeting
+        engines with a different truncation function (e.g. ``TRUNC(column, 'MM')``
+        in Oracle, ``strftime`` in SQLite).
         """
+        return (
+            f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
+            + f" AVG(CAST({variable_name} AS DOUBLE)) AS metric,"
+            + f" COUNT({variable_name}) AS n"
+            + " FROM ({source}) _vd"
+            + " GROUP BY 1 ORDER BY 1"
+        )
+
+    @staticmethod
+    def _strip_source(source: str) -> str:
+        """Strip trailing whitespace and semicolons from a SQL source string.
+
+        Prevents broken subquery SQL when *source* is injected as a derived
+        table via ``FROM ({source}) _vd``.  A trailing ``;`` would produce
+        invalid SQL such as ``FROM (SELECT ... FROM t;) _vd``.
+
+        Examples
+        --------
+        ``"SELECT * FROM t;"``   → ``"SELECT * FROM t"``
+        ``"SELECT * FROM t ;;"`` → ``"SELECT * FROM t"``
+        ``"SELECT * FROM t;\\n"`` → ``"SELECT * FROM t"``
+        """
+        return re.sub(r"[\s;]+$", "", source)

@@ -72,7 +72,9 @@ class TestIdentifierPipeline:
 class TestTargetBinaryPipeline:
     def test_has_not_null_and_proportion_drift(self):
         assert step_types(target_binary_pipeline("ts")) == [
-            NotNullCheck, CardinalityCheck, ProportionDriftCheck
+            NotNullCheck,
+            CardinalityCheck,
+            ProportionDriftCheck,
         ]
 
     def test_proportion_drift_is_failure(self):
@@ -106,7 +108,9 @@ class TestTargetCategoricalPipelineNoTime:
 class TestTargetContinuousPipeline:
     def test_has_not_null_and_ks_drift(self):
         assert step_types(target_continuous_pipeline("ts")) == [
-            NotNullCheck, CardinalityCheck, KSDriftCheck
+            NotNullCheck,
+            CardinalityCheck,
+            KSDriftCheck,
         ]
 
     def test_ks_drift_is_failure(self):
@@ -117,7 +121,9 @@ class TestTargetContinuousPipeline:
 class TestTargetContinuousPipelineNoTime:
     def test_has_not_null_and_outlier(self):
         assert step_types(target_continuous_pipeline_no_time()) == [
-            NotNullCheck, CardinalityCheck, OutlierCheck
+            NotNullCheck,
+            CardinalityCheck,
+            OutlierCheck,
         ]
 
     def test_outlier_is_failure(self):

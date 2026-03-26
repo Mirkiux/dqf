@@ -80,7 +80,7 @@ def target_binary_pipeline(time_field: str, period: str = "month") -> CheckPipel
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
             (
                 "cardinality",
-                CardinalityCheck(min_cardinality=2,max_cardinality=2, severity=Severity.FAILURE),
+                CardinalityCheck(min_cardinality=2, max_cardinality=2, severity=Severity.FAILURE),
             ),
             (
                 "proportion_drift",
@@ -102,7 +102,7 @@ def target_binary_pipeline_no_time() -> CheckPipeline:
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
             (
                 "cardinality",
-                CardinalityCheck(min_cardinality=2,max_cardinality=2, severity=Severity.FAILURE),
+                CardinalityCheck(min_cardinality=2, max_cardinality=2, severity=Severity.FAILURE),
             ),
         ]
     )

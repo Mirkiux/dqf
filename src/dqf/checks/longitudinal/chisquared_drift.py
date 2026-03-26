@@ -85,7 +85,7 @@ class ChiSquaredDriftCheck(BaseLongitudinalCheck):
     def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         return (
             f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
-            + f" CAST({variable_name} AS VARCHAR) AS category,"
+            + f" CAST({variable_name} AS VARCHAR(1000)) AS category,"
             + " COUNT(*) AS count"
             + " FROM ({source}) _vd"
             + f" WHERE {variable_name} IS NOT NULL"

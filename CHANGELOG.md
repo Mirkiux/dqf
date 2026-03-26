@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.8] — 2026-03-26
+
+### Fixed
+
+- `ChiSquaredDriftCheck.aggregation_sql`: `CAST(... AS VARCHAR)` → `CAST(... AS VARCHAR(1000))`. Engines such as Spark SQL and some ANSI-strict dialects require an explicit length for `VARCHAR`; the unparameterised form raised a parse error at runtime.
+
+---
+
 ## [0.1.7] — 2026-03-25
 
 ### Added
@@ -188,7 +196,8 @@ Initial release. Full implementation of the composable data quality validation f
 - 480 unit and integration tests (pytest)
 - 4 worked example scripts in `examples/`
 
-[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/Mirkiux/dqf/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Mirkiux/dqf/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Mirkiux/dqf/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/Mirkiux/dqf/compare/v0.1.4...v0.1.5

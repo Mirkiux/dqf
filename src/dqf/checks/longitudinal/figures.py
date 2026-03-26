@@ -276,7 +276,7 @@ def ks_drift_figure(
                 label=label,
             )
 
-        ax.set_title(f"{_var} — KS Drift  (min p = {_min_p:.4f}, threshold p ≤ {_thr})")
+        ax.set_title(f"{_var} — KS Drift  (min p = {_min_p:.4f}, fail if p ≤ {_thr})")
         ax.set_xlabel("value")
         ax.set_ylabel("ECDF")
         ax.legend(fontsize=8)

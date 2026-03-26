@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.9] — 2026-03-26
+
+### Fixed
+
+- `KSDriftCheck.aggregation_sql` and `ProportionDriftCheck.aggregation_sql`: wrapped `DATE_TRUNC(...)` with `CAST(... AS DATE)`. Spark SQL returns `TIMESTAMP` from `DATE_TRUNC`; without the cast the `period` column type differs between engines, causing pandas merge and groupby failures downstream.
+- `ChiSquaredDriftCheck.aggregation_sql`: same `CAST(DATE_TRUNC(...) AS DATE)` fix applied (all three overriding checks are now consistent with the default implementation in `BaseLongitudinalCheck`).
+
+---
+
 ## [0.1.8] — 2026-03-26
 
 ### Fixed
@@ -196,7 +205,8 @@ Initial release. Full implementation of the composable data quality validation f
 - 480 unit and integration tests (pytest)
 - 4 worked example scripts in `examples/`
 
-[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.8...HEAD
+[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.9...HEAD
+[0.1.9]: https://github.com/Mirkiux/dqf/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/Mirkiux/dqf/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Mirkiux/dqf/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/Mirkiux/dqf/compare/v0.1.5...v0.1.6

@@ -11,6 +11,32 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.7] — 2026-03-25
+
+### Added
+
+- `CardinalityThresholds` dataclass (`dqf.CardinalityThresholds`) with `low: int = 20` and `high: int = 50` fields — single source of truth for cardinality cutoffs.  Pass the same instance to both `build_default_resolver()` and `build_default_metadata_resolver()` to guarantee that check and metadata thresholds are identical.
+- `UniverseDataset` now accepts an optional `target: str | None = None` parameter to declare the supervised-model target column.  `resolve_variables()` reads it and automatically assigns `VariableRole.TARGET` to the matching variable before profiling — no manual role declaration needed.
+- `figure_factory: Callable[[], Figure] | None` field on `CheckResult` — a zero-argument callable that builds and returns a `matplotlib.Figure`.  Excluded from equality and hash so `CheckResult` semantics are unchanged.
+- `CheckResult.render_figure() -> Figure` — calls `figure_factory()` and raises `RuntimeError` when no factory is attached.
+- All seven longitudinal checks (`TrendCheck`, `StructuralBreakCheck`, `SeasonalityCheck`, `ChiSquaredDriftCheck`, `KSDriftCheck`, `ProportionDriftCheck`, `DistributionDriftCheck`) now attach a `figure_factory` to their result when there is sufficient data; the factory is `None` on skipped results.
+- `src/dqf/checks/longitudinal/figures.py` — dedicated figure-factory module with one factory function per longitudinal check.  Figures use `matplotlib.figure.Figure` directly (no pyplot state machine) and are safe for concurrent rendering.
+- `CardinalityCheck` added to `target_binary_pipeline`, `target_categorical_pipeline`, `target_continuous_pipeline`, and `boolean_pipeline` in the default resolver.
+
+### Changed
+
+- `infer_dtype()` (and `SemanticTypeInferenceBuilder._infer()`) now split the low-cardinality step by storage dtype: numeric storage → `NUMERIC_DISCRETE`; non-numeric storage → `CATEGORICAL`.  Previously all low-cardinality columns were classified as `CATEGORICAL` regardless of storage type.
+- `resolve_variables()` accepts `cardinality: CardinalityThresholds | None = None`; the threshold is forwarded to `infer_dtype()`, eliminating the hard-coded `low=20` with no override path.
+- `run_validation()` forwards the same `cardinality` parameter to `resolve_variables()`.
+- `build_default_resolver()` and `build_default_metadata_resolver()` accept `cardinality: CardinalityThresholds | None = None` in place of the individual `max_discrete_cardinality`, `max_categorical_cardinality`, and `high_cardinality_threshold` keyword arguments (old kwargs retained as deprecated aliases).
+- `numeric_discrete_pipeline()` no longer includes a `CardinalityCheck` ceiling; high-cardinality detection for discrete variables is now handled by the resolver-level `CardinalityCheck` in the same way as other types.
+
+### Breaking Changes
+
+- Numeric columns with `≤ low_cardinality_threshold` distinct values are now inferred as `NUMERIC_DISCRETE` instead of `CATEGORICAL`.  Integer-encoded categoricals (e.g. `0=cat, 1=dog`) will be dispatched to the `numeric_discrete_pipeline` rather than `categorical_pipeline` unless their `Variable` dtype is declared explicitly.
+
+---
+
 ## [0.1.6] — 2026-03-25
 
 ### Changed
@@ -162,5 +188,12 @@ Initial release. Full implementation of the composable data quality validation f
 - 480 unit and integration tests (pytest)
 - 4 worked example scripts in `examples/`
 
-[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/Mirkiux/dqf/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/Mirkiux/dqf/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/Mirkiux/dqf/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/Mirkiux/dqf/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/Mirkiux/dqf/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/Mirkiux/dqf/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/Mirkiux/dqf/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Mirkiux/dqf/releases/tag/v0.1.0

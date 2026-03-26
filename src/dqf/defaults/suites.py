@@ -257,17 +257,14 @@ def numeric_discrete_pipeline(
     time_field: str | None = None,
     period: str = "month",
     null_threshold: float = 0.10,
-    max_cardinality: int = 50,
 ) -> CheckPipeline:
     """Pipeline for ``DataType.NUMERIC_DISCRETE`` feature variables.
 
     Steps:
 
     1. **null_rate** (FAILURE) — fail when null rate exceeds *null_threshold*.
-    2. **cardinality** (WARNING) — warn when distinct values exceed *max_cardinality*,
-       which may indicate the column has been mis-classified as discrete.
-    3. **outlier** (FAILURE) — univariate outlier detection via Tukey's IQR method.
-    4. **chisquared_drift** (FAILURE) — sequential chi-squared test for distribution
+    2. **outlier** (FAILURE) — univariate outlier detection via Tukey's IQR method.
+    3. **chisquared_drift** (FAILURE) — sequential chi-squared test for distribution
        drift across periods.  Added only when *time_field* is provided.
 
     Parameters
@@ -279,15 +276,9 @@ def numeric_discrete_pipeline(
         DATE_TRUNC period (e.g. ``"month"``).
     null_threshold:
         Maximum allowed null rate.  Default ``0.10``.
-    max_cardinality:
-        Maximum expected number of distinct values.  Default ``50``.
     """
     steps: list[tuple[str, object]] = [
         ("null_rate", NullRateCheck(threshold=null_threshold, severity=Severity.FAILURE)),
-        (
-            "cardinality",
-            CardinalityCheck(max_cardinality=max_cardinality, severity=Severity.WARNING),
-        ),
         ("outlier", OutlierCheck(severity=Severity.FAILURE)),
     ]
     if time_field is not None:
@@ -526,10 +517,9 @@ def build_default_resolver(
     _tf3 = time_field
     _p3 = period
     _nt3 = null_threshold
-    _mdc = _card.high
     resolver.register(
         predicate=lambda v: v.dtype == DataType.NUMERIC_DISCRETE,
-        pipeline_factory=lambda: numeric_discrete_pipeline(_tf3, _p3, _nt3, _mdc),
+        pipeline_factory=lambda: numeric_discrete_pipeline(_tf3, _p3, _nt3),
         priority=10,
     )
 

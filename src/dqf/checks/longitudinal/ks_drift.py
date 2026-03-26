@@ -161,7 +161,12 @@ class KSDriftCheck(BaseLongitudinalCheck):
                 "baseline_periods": half,
             },
             figure_factory=figures.ks_drift_figure(
-                ecdf_by_period, periods_sorted, half,
-                min_p, self._p_threshold, passed, variable.name,
+                ecdf_by_period,
+                periods_sorted,
+                half,
+                min_p,
+                self._p_threshold,
+                passed,
+                variable.name,
             ),
         )

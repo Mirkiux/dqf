@@ -27,8 +27,16 @@ _GREY = "#aaaaaa"
 
 # tab10 palette — avoids runtime cm.tab10 attribute lookup that mypy cannot resolve
 _TAB10 = [
-    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
 ]
 
 
@@ -162,9 +170,7 @@ def seasonality_figure(
             patch.set_alpha(0.6)
         ax.set_xticks(range(1, n + 1))
         ax.set_xticklabels(labels, fontsize=8)
-        ax.set_title(
-            f"{_var} — Seasonality  (H = {_stat:.3f}, p = {_p:.4f}, fail if p ≤ {_thr})"
-        )
+        ax.set_title(f"{_var} — Seasonality  (H = {_stat:.3f}, p = {_p:.4f}, fail if p ≤ {_thr})")
         ax.set_xlabel(f"Season position  (cycle length = {_sl})")
         ax.set_ylabel("metric")
         fig.tight_layout()
@@ -216,9 +222,7 @@ def chisquared_drift_figure(
         # Vertical line between baseline and test window
         ax.axvline(x=_half - 0.5, linestyle="--", color="black", linewidth=1.0, label="split")
         ax.set_ylim(0, 1)
-        ax.set_title(
-            f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, fail if p ≤ {_thr})"
-        )
+        ax.set_title(f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, fail if p ≤ {_thr})")
         ax.set_xlabel("Period")
         ax.set_ylabel("Proportion")
         ax.tick_params(axis="x", rotation=45, labelsize=8)
@@ -269,8 +273,9 @@ def ks_drift_figure(
             label = legend_key if legend_key not in legend_added else None
             if label:
                 legend_added.add(legend_key)
-            ax.step(x_pts, y_pts, where="post", color=color, alpha=alpha,
-                    linewidth=1.2, label=label)
+            ax.step(
+                x_pts, y_pts, where="post", color=color, alpha=alpha, linewidth=1.2, label=label
+            )
 
         ax.set_title(f"{_var} — KS Drift  (fail if p ≤ {_thr}, min p = {_min_p:.4f})")
         ax.set_xlabel("value")
@@ -335,9 +340,7 @@ def proportion_drift_figure(
         )
         ax.axvline(x=_half - 0.5, linestyle="--", color="black", linewidth=1.0, label="split")
         ax.set_ylim(0, 1)
-        ax.set_title(
-            f"{_var} — Proportion Drift  (fail if p ≤ {_thr}, min p = {_min_p:.4f})"
-        )
+        ax.set_title(f"{_var} — Proportion Drift  (fail if p ≤ {_thr}, min p = {_min_p:.4f})")
         ax.set_xlabel("Period")
         ax.set_ylabel("Proportion")
         ax.tick_params(axis="x", rotation=45, labelsize=8)
@@ -376,14 +379,30 @@ def distribution_drift_figure(
         values = _df["metric"].to_numpy(float)
         n = len(values)
         split = max(1, n // 2)
-        ax1.plot(labels[:split], values[:split], marker="o", color=_BLUE, linewidth=1.5,
-                 label="reference")
+        ax1.plot(
+            labels[:split],
+            values[:split],
+            marker="o",
+            color=_BLUE,
+            linewidth=1.5,
+            label="reference",
+        )
         if split < n:
             # Connector between last reference and first test point
-            ax1.plot(labels[split - 1:split + 1], values[split - 1:split + 1],
-                     color=_GREY, linewidth=1.0)
-        ax1.plot(labels[split:], values[split:], marker="o",
-                 color=_result_color(_passed), linewidth=1.5, label="current")
+            ax1.plot(
+                labels[split - 1 : split + 1],
+                values[split - 1 : split + 1],
+                color=_GREY,
+                linewidth=1.0,
+            )
+        ax1.plot(
+            labels[split:],
+            values[split:],
+            marker="o",
+            color=_result_color(_passed),
+            linewidth=1.5,
+            label="current",
+        )
         ax1.axvline(x=split - 0.5, linestyle="--", color="black", linewidth=0.8)
         ax1.set_title(f"{_var} — metric over time")
         ax1.set_xlabel("Period")
@@ -395,8 +414,14 @@ def distribution_drift_figure(
         combined = np.concatenate([_ref, _cur])
         n_bins = min(10, max(3, len(combined) // 3))
         ax2.hist(_ref, bins=n_bins, alpha=0.5, color=_BLUE, density=True, label="reference")
-        ax2.hist(_cur, bins=n_bins, alpha=0.5, color=_result_color(_passed), density=True,
-                 label="current")
+        ax2.hist(
+            _cur,
+            bins=n_bins,
+            alpha=0.5,
+            color=_result_color(_passed),
+            density=True,
+            label="current",
+        )
         ax2.set_title(f"Distribution  (PSI = {_psi:.4f}, threshold = {_thr})")
         ax2.set_xlabel("metric value")
         ax2.set_ylabel("density")

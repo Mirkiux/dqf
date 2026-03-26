@@ -29,11 +29,13 @@ _POP = 100
 
 def _ts_df(n: int) -> pd.DataFrame:
     """Simple (period, metric, n) DataFrame with *n* rows."""
-    return pd.DataFrame({
-        "period": [f"2024-{i:02d}" for i in range(1, n + 1)],
-        "metric": [float(i) for i in range(1, n + 1)],
-        "n": [10] * n,
-    })
+    return pd.DataFrame(
+        {
+            "period": [f"2024-{i:02d}" for i in range(1, n + 1)],
+            "metric": [float(i) for i in range(1, n + 1)],
+            "n": [10] * n,
+        }
+    )
 
 
 def _cat_df(n_periods: int) -> pd.DataFrame:
@@ -56,11 +58,13 @@ def _ks_df(n_periods: int, vals_per_period: int = 5) -> pd.DataFrame:
 
 def _prop_df(n: int) -> pd.DataFrame:
     """(period, positive, n) DataFrame with *n* rows."""
-    return pd.DataFrame({
-        "period": [f"2024-{i:02d}" for i in range(1, n + 1)],
-        "positive": [5] * n,
-        "n": [10] * n,
-    })
+    return pd.DataFrame(
+        {
+            "period": [f"2024-{i:02d}" for i in range(1, n + 1)],
+            "positive": [5] * n,
+            "n": [10] * n,
+        }
+    )
 
 
 # ── TrendCheck ─────────────────────────────────────────────────────────────────

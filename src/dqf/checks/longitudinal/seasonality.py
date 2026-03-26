@@ -152,7 +152,12 @@ class SeasonalityCheck(BaseLongitudinalCheck):
                 "n_seasons": self._season_length,
             },
             figure_factory=figures.seasonality_figure(
-                groups, stat_f, p_f, self._p_threshold,
-                self._season_length, passed, variable.name,
+                groups,
+                stat_f,
+                p_f,
+                self._p_threshold,
+                self._season_length,
+                passed,
+                variable.name,
             ),
         )

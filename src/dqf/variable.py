@@ -44,11 +44,14 @@ class Variable:
         Inference priority
         ------------------
         1. Boolean storage dtype → ``BOOLEAN``
-        2. Distinct non-null values ≤ *low_cardinality_threshold*
-           → ``CATEGORICAL``
-           (checked before numeric/datetime so that a numeric column with few
-           distinct values — e.g. a 0/1 flag stored as int — is classified as
-           categorical rather than continuous)
+        2. Distinct non-null values ≤ *low_cardinality_threshold*:
+
+           - Numeric storage dtype → ``NUMERIC_DISCRETE``
+             (e.g. ``{0, 1, 2, 3}`` stored as ``int64`` — discrete scores,
+             ordinal ratings, count buckets)
+           - All other storage dtypes → ``CATEGORICAL``
+             (e.g. ``{"cat", "dog"}`` stored as ``object``)
+
         3. Numeric storage dtype → ``NUMERIC_CONTINUOUS``
         4. Datetime storage dtype → ``DATETIME``
         5. Object/string: ≥95 % of non-null values coerce to numeric
@@ -62,9 +65,9 @@ class Variable:
         series:
             The pandas Series for this column in the materialised dataset.
         low_cardinality_threshold:
-            Maximum number of distinct non-null values for a column to be
-            classified as ``CATEGORICAL``.  Applies to all storage dtypes,
-            not only strings.  Default ``20``.
+            Maximum number of distinct non-null values for step 2.
+            Numeric columns at or below this count become ``NUMERIC_DISCRETE``;
+            non-numeric columns become ``CATEGORICAL``.  Default ``20``.
         """
         if self.dtype != DataType.PENDING:
             return
@@ -75,7 +78,10 @@ class Variable:
 
         non_null = series.dropna()
         if non_null.nunique() <= low_cardinality_threshold:
-            self.dtype = DataType.CATEGORICAL
+            if pd.api.types.is_numeric_dtype(series):
+                self.dtype = DataType.NUMERIC_DISCRETE
+            else:
+                self.dtype = DataType.CATEGORICAL
             return
 
         if pd.api.types.is_numeric_dtype(series):

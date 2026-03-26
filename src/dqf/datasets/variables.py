@@ -208,6 +208,7 @@ class VariablesDataset:
     def resolve_variables(
         self,
         metadata_resolver: MetadataResolver,
+        low_cardinality_threshold: int = 20,
     ) -> list[Variable]:
         """Create and profile one :class:`~dqf.variable.Variable` per data column.
 
@@ -221,6 +222,19 @@ class VariablesDataset:
         :attr:`~dqf.enums.VariableRole.TARGET` before profiling.
 
         The resolved list is also stored on ``self.variables``.
+
+        Parameters
+        ----------
+        metadata_resolver:
+            Resolver that selects a
+            :class:`~dqf.metadata.base.MetadataBuilderPipeline` for each
+            variable.
+        low_cardinality_threshold:
+            Maximum distinct non-null values for a column to be classified as
+            ``NUMERIC_DISCRETE`` (numeric storage) or ``CATEGORICAL``
+            (non-numeric storage) during dtype inference.  Must match the value
+            used when building the metadata resolver so that dtype assignment
+            and metadata profiling agree.  Default ``20``.
         """
         data = self.materialise()
         resolved: list[Variable] = []
@@ -228,7 +242,7 @@ class VariablesDataset:
             if col == _VD_MATCHED:
                 continue
             v = Variable(name=col, dtype=DataType.PENDING)
-            v.infer_dtype(data[col])
+            v.infer_dtype(data[col], low_cardinality_threshold)
             if col == self.universe.target:
                 v.role = VariableRole.TARGET
             metadata_resolver.resolve(v).profile(self, v)
@@ -246,6 +260,7 @@ class VariablesDataset:
         metadata_resolver: MetadataResolver | None = None,
         dataset_name: str = "",
         force: bool = False,
+        low_cardinality_threshold: int = 20,
     ) -> ValidationReport:
         """Run the full validation pipeline and return a :class:`~dqf.report.ValidationReport`.
 
@@ -280,6 +295,10 @@ class VariablesDataset:
             When ``True``, re-runs validation even if ``self.validation_state``
             is already ``PASSED``.  Also forces re-materialisation of both
             datasets.
+        low_cardinality_threshold:
+            Forwarded to :meth:`resolve_variables` when auto-resolving.
+            Controls the CATEGORICAL / NUMERIC_DISCRETE boundary during dtype
+            inference.  Default ``20``.
         """
         if self.validation_state == ValidationStatus.PASSED and not force:
             assert self.validation_report is not None
@@ -294,7 +313,7 @@ class VariablesDataset:
 
         # 3. Auto-resolve variables when needed
         if not self.variables and metadata_resolver is not None:
-            self.resolve_variables(metadata_resolver)
+            self.resolve_variables(metadata_resolver, low_cardinality_threshold)
 
         # 4. Get per-variable pipelines
         pipelines = check_suite_resolver.resolve_all(self)

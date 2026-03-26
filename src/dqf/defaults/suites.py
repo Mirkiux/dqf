@@ -38,6 +38,7 @@ from dqf.checks.longitudinal.proportion_drift import ProportionDriftCheck
 from dqf.checks.longitudinal.structural_break import StructuralBreakCheck
 from dqf.checks.longitudinal.trend import TrendCheck
 from dqf.checks.pipeline import CheckPipeline
+from dqf.config import CardinalityThresholds
 from dqf.enums import DataType, Severity, VariableRole
 from dqf.resolver import CheckSuiteResolver
 
@@ -383,8 +384,7 @@ def build_default_resolver(
     time_field: str | None = None,
     period: str = "month",
     null_threshold: float = 0.10,
-    max_discrete_cardinality: int = 50,
-    max_categorical_cardinality: int = 50,
+    cardinality: CardinalityThresholds | None = None,
 ) -> CheckSuiteResolver:
     """Return a pre-configured :class:`~dqf.resolver.CheckSuiteResolver`.
 
@@ -411,10 +411,13 @@ def build_default_resolver(
     null_threshold:
         Maximum null rate applied to NUMERIC_CONTINUOUS, NUMERIC_DISCRETE,
         CATEGORICAL, BOOLEAN, and the catch-all rule.  Default ``0.10``.
-    max_discrete_cardinality:
-        Cardinality warning threshold for NUMERIC_DISCRETE variables.  Default ``50``.
-    max_categorical_cardinality:
-        Cardinality warning threshold for CATEGORICAL variables.  Default ``50``.
+    cardinality:
+        :class:`~dqf.config.CardinalityThresholds` instance that controls the
+        ``max_cardinality`` ceiling for NUMERIC_DISCRETE and CATEGORICAL check
+        pipelines.  Pass the **same** instance to
+        :func:`~dqf.defaults.build_default_metadata_resolver` to keep check
+        and metadata thresholds in sync.  ``None`` uses the library defaults
+        (``low=20``, ``high=50``).
 
     Returns
     -------
@@ -431,13 +434,13 @@ def build_default_resolver(
 
         resolver = build_default_resolver(time_field="event_date", period="month")
 
-    Custom thresholds::
+    Shared cardinality config with the metadata resolver::
 
-        resolver = build_default_resolver(
-            time_field="event_date",
-            null_threshold=0.05,
-        )
+        thresholds = CardinalityThresholds(low=10, high=30)
+        check_resolver = build_default_resolver(cardinality=thresholds)
+        metadata_resolver = build_default_metadata_resolver(cardinality=thresholds)
     """
+    _card = cardinality if cardinality is not None else CardinalityThresholds()
     resolver = CheckSuiteResolver()
 
     # Priority 30 — IDENTIFIER role
@@ -523,7 +526,7 @@ def build_default_resolver(
     _tf3 = time_field
     _p3 = period
     _nt3 = null_threshold
-    _mdc = max_discrete_cardinality
+    _mdc = _card.high
     resolver.register(
         predicate=lambda v: v.dtype == DataType.NUMERIC_DISCRETE,
         pipeline_factory=lambda: numeric_discrete_pipeline(_tf3, _p3, _nt3, _mdc),
@@ -532,7 +535,7 @@ def build_default_resolver(
 
     # Priority 7 — CATEGORICAL feature
     _nt4 = null_threshold
-    _mcc = max_categorical_cardinality
+    _mcc = _card.high
     resolver.register(
         predicate=lambda v: v.dtype == DataType.CATEGORICAL,
         pipeline_factory=lambda: categorical_pipeline(_nt4, _mcc),

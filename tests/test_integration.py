@@ -18,6 +18,7 @@ from dqf.checks.longitudinal.ks_drift import KSDriftCheck
 from dqf.checks.longitudinal.proportion_drift import ProportionDriftCheck
 from dqf.checks.longitudinal.trend import TrendCheck
 from dqf.checks.pipeline import CheckPipeline
+from dqf.config import CardinalityThresholds
 from dqf.datasets.universe import UniverseDataset
 from dqf.datasets.variables import VariablesDataset
 from dqf.defaults.suites import build_default_resolver
@@ -596,8 +597,10 @@ class TestCustomResolverOnTopOfDefault:
             _UNIVERSE_SQL, "SELECT entity_id, category FROM v", universe_df, vars_df, variables
         )
 
-        # max_categorical_cardinality=5 → 10 distinct values → WARNING
-        report = dataset.run_validation(build_default_resolver(max_categorical_cardinality=5))
+        # CardinalityThresholds(high=5) → 10 distinct values → WARNING
+        report = dataset.run_validation(
+            build_default_resolver(cardinality=CardinalityThresholds(high=5))
+        )
         card_result = next(
             r for r in report.variable_results["category"] if r.check_name == "cardinality"
         )

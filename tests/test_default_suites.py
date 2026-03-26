@@ -14,6 +14,7 @@ from dqf.checks.longitudinal.proportion_drift import ProportionDriftCheck
 from dqf.checks.longitudinal.structural_break import StructuralBreakCheck
 from dqf.checks.longitudinal.trend import TrendCheck
 from dqf.checks.pipeline import CheckPipeline
+from dqf.config import CardinalityThresholds
 from dqf.defaults.suites import (
     boolean_pipeline,
     build_default_resolver,
@@ -354,12 +355,12 @@ class TestBuildDefaultResolver:
 
     def test_max_categorical_cardinality_propagates(self):
         v = make_variable(dtype=DataType.CATEGORICAL)
-        pipeline = build_default_resolver(max_categorical_cardinality=20).resolve(v)
+        pipeline = build_default_resolver(cardinality=CardinalityThresholds(high=20)).resolve(v)
         assert step_checks(pipeline)[1]._max == 20
 
     def test_max_discrete_cardinality_propagates(self):
         v = make_variable(dtype=DataType.NUMERIC_DISCRETE)
-        pipeline = build_default_resolver(max_discrete_cardinality=30).resolve(v)
+        pipeline = build_default_resolver(cardinality=CardinalityThresholds(high=30)).resolve(v)
         assert step_checks(pipeline)[1]._max == 30
 
     def test_each_resolve_returns_fresh_pipeline(self):

@@ -71,7 +71,7 @@ class TestIdentifierPipeline:
 
 class TestTargetBinaryPipeline:
     def test_has_not_null_and_proportion_drift(self):
-        assert step_types(target_binary_pipeline("ts")) == [NotNullCheck, ProportionDriftCheck]
+        assert step_types(target_binary_pipeline("ts")) == [NotNullCheck, CardinalityCheck, ProportionDriftCheck]
 
     def test_proportion_drift_is_failure(self):
         checks = step_checks(target_binary_pipeline("ts"))
@@ -80,13 +80,14 @@ class TestTargetBinaryPipeline:
 
 class TestTargetBinaryPipelineNoTime:
     def test_has_not_null_only(self):
-        assert step_types(target_binary_pipeline_no_time()) == [NotNullCheck]
+        assert step_types(target_binary_pipeline_no_time()) == [NotNullCheck, CardinalityCheck]
 
 
 class TestTargetCategoricalPipeline:
     def test_has_not_null_and_chisquared(self):
         assert step_types(target_categorical_pipeline("ts")) == [
             NotNullCheck,
+            CardinalityCheck,
             ChiSquaredDriftCheck,
         ]
 
@@ -97,12 +98,12 @@ class TestTargetCategoricalPipeline:
 
 class TestTargetCategoricalPipelineNoTime:
     def test_has_not_null_only(self):
-        assert step_types(target_categorical_pipeline_no_time()) == [NotNullCheck]
+        assert step_types(target_categorical_pipeline_no_time()) == [NotNullCheck, CardinalityCheck]
 
 
 class TestTargetContinuousPipeline:
     def test_has_not_null_and_ks_drift(self):
-        assert step_types(target_continuous_pipeline("ts")) == [NotNullCheck, KSDriftCheck]
+        assert step_types(target_continuous_pipeline("ts")) == [NotNullCheck, CardinalityCheck, KSDriftCheck]
 
     def test_ks_drift_is_failure(self):
         checks = step_checks(target_continuous_pipeline("ts"))
@@ -111,7 +112,7 @@ class TestTargetContinuousPipeline:
 
 class TestTargetContinuousPipelineNoTime:
     def test_has_not_null_and_outlier(self):
-        assert step_types(target_continuous_pipeline_no_time()) == [NotNullCheck, OutlierCheck]
+        assert step_types(target_continuous_pipeline_no_time()) == [NotNullCheck, CardinalityCheck, OutlierCheck]
 
     def test_outlier_is_failure(self):
         checks = step_checks(target_continuous_pipeline_no_time())
@@ -200,7 +201,7 @@ class TestCategoricalPipeline:
 
 class TestBooleanPipeline:
     def test_has_null_rate_only(self):
-        assert step_types(boolean_pipeline()) == [NullRateCheck]
+        assert step_types(boolean_pipeline()) == [NullRateCheck, CardinalityCheck]
 
     def test_null_rate_is_failure(self):
         assert step_checks(boolean_pipeline())[0].severity == Severity.FAILURE
@@ -241,37 +242,37 @@ class TestBuildDefaultResolver:
     def test_target_boolean_no_time_gets_not_null(self):
         v = make_variable(dtype=DataType.BOOLEAN, role=VariableRole.TARGET)
         pipeline = build_default_resolver().resolve(v)
-        assert step_types(pipeline) == [NotNullCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck]
 
     def test_target_boolean_with_time_gets_proportion_drift(self):
         v = make_variable(dtype=DataType.BOOLEAN, role=VariableRole.TARGET)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, ProportionDriftCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, ProportionDriftCheck]
 
     def test_target_categorical_no_time_gets_not_null(self):
         v = make_variable(dtype=DataType.CATEGORICAL, role=VariableRole.TARGET)
         pipeline = build_default_resolver().resolve(v)
-        assert step_types(pipeline) == [NotNullCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck]
 
     def test_target_categorical_with_time_gets_chisquared(self):
         v = make_variable(dtype=DataType.CATEGORICAL, role=VariableRole.TARGET)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, ChiSquaredDriftCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, ChiSquaredDriftCheck]
 
     def test_target_discrete_with_time_gets_chisquared(self):
         v = make_variable(dtype=DataType.NUMERIC_DISCRETE, role=VariableRole.TARGET)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, ChiSquaredDriftCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, ChiSquaredDriftCheck]
 
     def test_target_continuous_no_time_gets_not_null_and_outlier(self):
         v = make_variable(dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.TARGET)
         pipeline = build_default_resolver().resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, OutlierCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, OutlierCheck]
 
     def test_target_continuous_with_time_gets_ks_drift(self):
         v = make_variable(dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.TARGET)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, KSDriftCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, KSDriftCheck]
 
     def test_target_unknown_dtype_gets_not_null_fallback(self):
         v = make_variable(dtype=DataType.TEXT, role=VariableRole.TARGET)
@@ -312,7 +313,7 @@ class TestBuildDefaultResolver:
     def test_boolean(self):
         v = make_variable(dtype=DataType.BOOLEAN)
         pipeline = build_default_resolver().resolve(v)
-        assert step_types(pipeline) == [NullRateCheck]
+        assert step_types(pipeline) == [NullRateCheck, CardinalityCheck]
 
     def test_text_falls_through_to_catch_all(self):
         v = make_variable(dtype=DataType.TEXT)
@@ -331,7 +332,7 @@ class TestBuildDefaultResolver:
     def test_target_continuous_beats_numeric_continuous(self):
         v = make_variable(dtype=DataType.NUMERIC_CONTINUOUS, role=VariableRole.TARGET)
         pipeline = build_default_resolver(time_field="ts").resolve(v)
-        assert step_types(pipeline) == [NotNullCheck, KSDriftCheck]
+        assert step_types(pipeline) == [NotNullCheck, CardinalityCheck, KSDriftCheck]
 
     # Threshold propagation
     def test_null_threshold_propagates_to_continuous(self):

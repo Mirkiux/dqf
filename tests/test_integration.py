@@ -117,7 +117,7 @@ class TestEndToEndCrossSectional:
     def test_boolean_gets_null_rate(self, dataset: VariablesDataset) -> None:
         report = dataset.run_validation(build_default_resolver())
         names = [r.check_name for r in report.variable_results["is_active"]]
-        assert names == ["null_rate"]
+        assert names == ["null_rate", "cardinality"]
 
     def test_overall_status_passed_on_clean_data(self, dataset: VariablesDataset) -> None:
         report = dataset.run_validation(build_default_resolver())
@@ -207,7 +207,7 @@ class TestEndToEndIdentifierAndTarget:
         )
         report = dataset.run_validation(build_default_resolver())
         names = [r.check_name for r in report.variable_results["score"]]
-        assert names == ["not_null", "outlier"]
+        assert names == ["not_null", "cardinality", "outlier"]
 
     def test_target_boolean_no_time_gets_not_null_only(self) -> None:
         universe_df = pd.DataFrame({"entity_id": [1, 2, 3]})
@@ -224,7 +224,7 @@ class TestEndToEndIdentifierAndTarget:
         )
         report = dataset.run_validation(build_default_resolver())
         names = [r.check_name for r in report.variable_results["target"]]
-        assert names == ["not_null"]
+        assert names == ["not_null", "cardinality"]
 
     def test_identifier_not_null_check_passes_with_no_nulls(self) -> None:
         universe_df = pd.DataFrame({"entity_id": [1, 2, 3]})
@@ -354,7 +354,7 @@ class TestEndToEndTargetDrift:
         )
         report = dataset.run_validation(build_default_resolver(time_field="ts"))
         names = [r.check_name for r in report.variable_results["target"]]
-        assert names == ["not_null", "proportion_drift"]
+        assert names == ["not_null", "cardinality", "proportion_drift"]
 
     def test_continuous_target_with_time_runs_ks_drift(self) -> None:
         ks_check = KSDriftCheck(time_field="ts", period="month")
@@ -380,7 +380,7 @@ class TestEndToEndTargetDrift:
         )
         report = dataset.run_validation(build_default_resolver(time_field="ts"))
         names = [r.check_name for r in report.variable_results["score"]]
-        assert names == ["not_null", "ks_drift"]
+        assert names == ["not_null", "cardinality", "ks_drift"]
 
     def test_categorical_target_with_time_runs_chisquared_drift(self) -> None:
         chi_check = ChiSquaredDriftCheck(time_field="ts", period="month")
@@ -407,7 +407,7 @@ class TestEndToEndTargetDrift:
         )
         report = dataset.run_validation(build_default_resolver(time_field="ts"))
         names = [r.check_name for r in report.variable_results["label"]]
-        assert names == ["not_null", "chisquared_drift"]
+        assert names == ["not_null", "cardinality", "chisquared_drift"]
 
     def test_stable_binary_proportion_passes(self) -> None:
         prop_check = ProportionDriftCheck(time_field="ts", period="month")

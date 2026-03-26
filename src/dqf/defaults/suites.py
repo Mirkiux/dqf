@@ -17,7 +17,7 @@ Default priority order
 15  NUMERIC_CONTINUOUS  — null rate (FAILURE) + trend + structural break (FAILURE)
 10  NUMERIC_DISCRETE   — null rate (FAILURE) + cardinality (WARNING) + outlier (FAILURE)
  7  CATEGORICAL                            — null rate (FAILURE) + cardinality (WARNING)
- 5  BOOLEAN                                — null rate (FAILURE)
+ 5  BOOLEAN                                — null rate (FAILURE) + cardinality min=max=2 (WARNING)
  0  catch-all                              — null rate (WARNING)
 
 When *time_field* is ``None``, longitudinal checks are omitted:
@@ -79,6 +79,10 @@ def target_binary_pipeline(time_field: str, period: str = "month") -> CheckPipel
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
             (
+                "cardinality",
+                CardinalityCheck(min_cardinality=2,max_cardinality=2, severity=Severity.FAILURE),
+            ),
+            (
                 "proportion_drift",
                 ProportionDriftCheck(
                     time_field=time_field, period=period, severity=Severity.FAILURE
@@ -96,6 +100,10 @@ def target_binary_pipeline_no_time() -> CheckPipeline:
     return CheckPipeline(
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=2,max_cardinality=2, severity=Severity.FAILURE),
+            ),
         ]
     )
 
@@ -112,6 +120,10 @@ def target_categorical_pipeline(time_field: str, period: str = "month") -> Check
     return CheckPipeline(
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=3, severity=Severity.FAILURE),
+            ),
             (
                 "chisquared_drift",
                 ChiSquaredDriftCheck(
@@ -130,6 +142,10 @@ def target_categorical_pipeline_no_time() -> CheckPipeline:
     return CheckPipeline(
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=3, severity=Severity.FAILURE),
+            ),
         ]
     )
 
@@ -146,6 +162,10 @@ def target_continuous_pipeline(time_field: str, period: str = "month") -> CheckP
     return CheckPipeline(
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=3, severity=Severity.FAILURE),
+            ),
             (
                 "ks_drift",
                 KSDriftCheck(time_field=time_field, period=period, severity=Severity.FAILURE),
@@ -165,6 +185,10 @@ def target_continuous_pipeline_no_time() -> CheckPipeline:
     return CheckPipeline(
         [
             ("not_null", NotNullCheck(severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=3, severity=Severity.FAILURE),
+            ),
             ("outlier", OutlierCheck(severity=Severity.FAILURE)),
         ]
     )
@@ -310,7 +334,11 @@ def categorical_pipeline(
 def boolean_pipeline(null_threshold: float = 0.10) -> CheckPipeline:
     """Pipeline for ``DataType.BOOLEAN`` feature variables.
 
-    Checks null rate (FAILURE).
+    Steps:
+
+    1. **null_rate** (FAILURE) — fail when null rate exceeds *null_threshold*.
+    2. **cardinality** (WARNING) — warn when distinct values are not exactly 2,
+       which signals a degenerate constant column (zero discriminative power).
 
     Parameters
     ----------
@@ -320,6 +348,10 @@ def boolean_pipeline(null_threshold: float = 0.10) -> CheckPipeline:
     return CheckPipeline(
         [
             ("null_rate", NullRateCheck(threshold=null_threshold, severity=Severity.FAILURE)),
+            (
+                "cardinality",
+                CardinalityCheck(min_cardinality=2, max_cardinality=2, severity=Severity.WARNING),
+            ),
         ]
     )
 

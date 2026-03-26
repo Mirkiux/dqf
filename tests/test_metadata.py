@@ -254,36 +254,79 @@ class TestSemanticTypeInferenceBuilder:
         result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.BOOLEAN
 
-    def test_int_series_infers_numeric_continuous(self) -> None:
+    def test_low_cardinality_int_series_infers_numeric_discrete(self) -> None:
+        # Few distinct integers → NUMERIC_DISCRETE (low cardinality + numeric storage)
         v = make_variable()
         dataset = make_dataset_for_column("x", pd.Series([1, 2, 3]))
         result = self.builder.profile(dataset, v)
+        assert result["semantic_dtype"] == DT.NUMERIC_DISCRETE
+
+    def test_high_cardinality_int_series_infers_numeric_continuous(self) -> None:
+        # Many distinct integers → NUMERIC_CONTINUOUS (passes low-cardinality threshold)
+        v = make_variable()
+        dataset = make_dataset_for_column("x", pd.Series(range(30)))
+        result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.NUMERIC_CONTINUOUS
 
-    def test_float_series_infers_numeric_continuous(self) -> None:
+    def test_low_cardinality_float_series_infers_numeric_discrete(self) -> None:
+        # Few distinct floats → NUMERIC_DISCRETE
         v = make_variable()
         dataset = make_dataset_for_column("x", pd.Series([1.0, 2.5, 3.7]))
+        result = self.builder.profile(dataset, v)
+        assert result["semantic_dtype"] == DT.NUMERIC_DISCRETE
+
+    def test_high_cardinality_float_series_infers_numeric_continuous(self) -> None:
+        # Many distinct floats → NUMERIC_CONTINUOUS
+        v = make_variable()
+        dataset = make_dataset_for_column("x", pd.Series([i * 0.1 for i in range(30)]))
         result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.NUMERIC_CONTINUOUS
 
     def test_datetime_series_infers_datetime(self) -> None:
+        # Many distinct datetimes → DATETIME
         v = make_variable()
-        series = pd.Series(pd.to_datetime(["2024-01-01", "2024-01-02"]))
+        series = pd.Series(pd.date_range("2024-01-01", periods=30, freq="D"))
+        dataset = make_dataset_for_column("x", series)
+        result = self.builder.profile(dataset, v)
+        assert result["semantic_dtype"] == DT.DATETIME
+
+    def test_low_cardinality_datetime_series_infers_datetime(self) -> None:
+        # Low-cardinality datetime64 storage → DATETIME (not CATEGORICAL)
+        v = make_variable()
+        series = pd.Series(pd.date_range("2024-01-01", periods=2, freq="D"))
         dataset = make_dataset_for_column("x", series)
         result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.DATETIME
 
     def test_string_numeric_infers_numeric(self) -> None:
+        # Many distinct string-encoded numbers → NUMERIC_CONTINUOUS via coercion
+        v = make_variable()
+        dataset = make_dataset_for_column("x", pd.Series([str(i) for i in range(30)]))
+        result = self.builder.profile(dataset, v)
+        assert result["semantic_dtype"] == DT.NUMERIC_CONTINUOUS
+
+    def test_low_cardinality_string_numeric_infers_numeric(self) -> None:
+        # Low-cardinality string-encoded numbers → NUMERIC_CONTINUOUS via coercion
+        # (coerce check runs before cardinality fallback for object/string)
         v = make_variable()
         dataset = make_dataset_for_column("x", pd.Series(["1", "2", "3"]))
         result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.NUMERIC_CONTINUOUS
 
     def test_string_datetime_infers_datetime(self) -> None:
+        # Many distinct string-encoded dates → DATETIME via coercion
         v = make_variable()
-        dataset = make_dataset_for_column(
-            "x", pd.Series(["2024-01-01", "2024-01-02", "2024-01-03"])
-        )
+        dates = pd.date_range("2024-01-01", periods=30, freq="D").strftime("%Y-%m-%d").tolist()
+        dataset = make_dataset_for_column("x", pd.Series(dates))
+        result = self.builder.profile(dataset, v)
+        assert result["semantic_dtype"] == DT.DATETIME
+
+    def test_low_cardinality_string_datetime_infers_datetime(self) -> None:
+        # Low-cardinality string-encoded dates → DATETIME via coercion
+        # (coerce check runs before cardinality fallback for object/string)
+        v = make_variable()
+        dates = pd.date_range("2024-01-01", periods=2, freq="D").strftime("%Y-%m-%d").tolist()
+        dataset = make_dataset_for_column("x", pd.Series(dates))
         result = self.builder.profile(dataset, v)
         assert result["semantic_dtype"] == DT.DATETIME
 

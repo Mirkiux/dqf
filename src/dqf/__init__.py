@@ -37,6 +37,7 @@ from dqf.checks import (
     TrendCheck,
     UniquenessCheck,
 )
+from dqf.config import CardinalityThresholds
 from dqf.datasets import UniverseDataset, VariablesDataset
 from dqf.defaults import (
     build_default_metadata_pipeline,
@@ -51,6 +52,7 @@ from dqf.results import CheckResult, ValidationResult
 from dqf.variable import Variable
 
 __all__ = [
+    "CardinalityThresholds",
     "build_default_resolver",
     "build_default_metadata_pipeline",
     "build_default_metadata_resolver",

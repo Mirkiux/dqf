@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from dqf.config import CardinalityThresholds
 from dqf.enums import DataType, VariableRole
 from dqf.metadata.base import MetadataBuilderPipeline
 from dqf.metadata.builders.cardinality_builder import CardinalityBuilder
@@ -282,8 +283,7 @@ def build_default_metadata_pipeline(
 
 
 def build_default_metadata_resolver(
-    high_cardinality_threshold: int = 50,
-    low_cardinality_threshold: int = 20,
+    cardinality: CardinalityThresholds | None = None,
 ) -> MetadataResolver:
     """Return a pre-configured :class:`~dqf.metadata.resolver.MetadataResolver`.
 
@@ -303,12 +303,14 @@ def build_default_metadata_resolver(
 
     Parameters
     ----------
-    high_cardinality_threshold:
-        Passed to ``NUMERIC_DISCRETE`` and ``CATEGORICAL`` pipelines.
-        Default ``50``.
-    low_cardinality_threshold:
-        Passed to ``TARGET`` and catch-all pipelines for semantic type
-        inference.  Default ``20``.
+    cardinality:
+        :class:`~dqf.config.CardinalityThresholds` instance that controls both
+        the ``high_cardinality_threshold`` for ``NUMERIC_DISCRETE`` /
+        ``CATEGORICAL`` pipelines and the ``low_cardinality_threshold`` for
+        ``TARGET`` / catch-all semantic inference.  Pass the **same** instance
+        to :func:`~dqf.defaults.build_default_resolver` to keep check and
+        metadata thresholds in sync.  ``None`` uses the library defaults
+        (``low=20``, ``high=50``).
 
     Returns
     -------
@@ -323,12 +325,12 @@ def build_default_metadata_resolver(
         resolver = build_default_metadata_resolver()
         dataset.resolve_variables(resolver)
 
-    Customised thresholds::
+    Shared cardinality config with the check resolver::
 
-        resolver = build_default_metadata_resolver(
-            high_cardinality_threshold=20,
-            low_cardinality_threshold=10,
-        )
+        thresholds = CardinalityThresholds(low=10, high=30)
+        check_resolver = build_default_resolver(cardinality=thresholds)
+        metadata_resolver = build_default_metadata_resolver(cardinality=thresholds)
+        dataset.resolve_variables(metadata_resolver, cardinality=thresholds)
 
     Domain-specific override at higher priority::
 
@@ -342,10 +344,11 @@ def build_default_metadata_resolver(
             priority=50,
         )
     """
+    _card = cardinality if cardinality is not None else CardinalityThresholds()
     resolver = MetadataResolver()
 
-    _hct = high_cardinality_threshold
-    _lct = low_cardinality_threshold
+    _hct = _card.high
+    _lct = _card.low
 
     # Priority 30 — IDENTIFIER role
     resolver.register(

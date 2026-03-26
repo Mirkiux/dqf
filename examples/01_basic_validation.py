@@ -79,7 +79,7 @@ dataset = dqf.VariablesDataset(
 # ──────────────────────────────────────────────────────────────────────────────
 
 metadata_resolver = dqf.build_default_metadata_resolver(
-    high_cardinality_threshold=20,  # flag CATEGORICAL/DISCRETE with > 20 distinct values
+    cardinality=dqf.CardinalityThresholds(high=20),  # flag CATEGORICAL with > 20 distinct values
 )
 
 dataset.resolve_variables(metadata_resolver)
@@ -95,7 +95,7 @@ print()
 
 check_resolver = dqf.build_default_resolver(
     null_threshold=0.10,  # fail features with > 10% nulls
-    max_categorical_cardinality=20,
+    cardinality=dqf.CardinalityThresholds(high=20),
 )
 
 report = dataset.run_validation(check_resolver, dataset_name="customer_features")

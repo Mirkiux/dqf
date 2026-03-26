@@ -22,15 +22,15 @@ class SemanticTypeInferenceBuilder(BaseMetadataBuilder):
 
     Inference priority:
     1. Boolean dtype → ``BOOLEAN``
-    2. Low cardinality (≤ ``low_cardinality_threshold`` unique non-null values):
+    2. Numeric dtype:
 
-       - Numeric storage dtype → ``NUMERIC_DISCRETE``
-       - All other storage dtypes → ``CATEGORICAL``
+       - Distinct non-null values ≤ ``low_cardinality_threshold`` → ``NUMERIC_DISCRETE``
+       - Otherwise → ``NUMERIC_CONTINUOUS``
 
-    3. Numeric dtype → ``NUMERIC_CONTINUOUS``
-    4. Datetime dtype → ``DATETIME``
-    5. Object/string: attempt numeric coercion (≥95% success) → ``NUMERIC_CONTINUOUS``
-    6. Object/string: attempt datetime coercion (≥95% success) → ``DATETIME``
+    3. Datetime dtype → ``DATETIME``
+    4. Object/string: attempt numeric coercion (≥95% success) → ``NUMERIC_CONTINUOUS``
+    5. Object/string: attempt datetime coercion (≥95% success) → ``DATETIME``
+    6. Distinct non-null values ≤ ``low_cardinality_threshold`` → ``CATEGORICAL``
     7. Default → ``TEXT``
     """
 
@@ -54,18 +54,16 @@ def _infer(series: pd.Series, low_cardinality_threshold: int) -> DataType:
         return DataType.BOOLEAN
 
     non_null = series.dropna()
-    if non_null.nunique() <= low_cardinality_threshold:
-        if pd.api.types.is_numeric_dtype(series):
-            return DataType.NUMERIC_DISCRETE
-        return DataType.CATEGORICAL
 
     if pd.api.types.is_numeric_dtype(series):
+        if non_null.nunique() <= low_cardinality_threshold:
+            return DataType.NUMERIC_DISCRETE
         return DataType.NUMERIC_CONTINUOUS
 
     if pd.api.types.is_datetime64_any_dtype(series):
         return DataType.DATETIME
 
-    # Object / string — try coercions on non-null values
+    # Object / string — try coercions before cardinality fallback
     if len(non_null) > 0:
         numeric_converted = pd.to_numeric(non_null, errors="coerce")
         if numeric_converted.notna().mean() >= _COERCE_THRESHOLD:
@@ -74,5 +72,8 @@ def _infer(series: pd.Series, low_cardinality_threshold: int) -> DataType:
         datetime_converted = pd.to_datetime(non_null, errors="coerce")
         if datetime_converted.notna().mean() >= _COERCE_THRESHOLD:
             return DataType.DATETIME
+
+    if non_null.nunique() <= low_cardinality_threshold:
+        return DataType.CATEGORICAL
 
     return DataType.TEXT

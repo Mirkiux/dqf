@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 from dqf.adapters.base import DataSourceAdapter
+from dqf.config import CardinalityThresholds
 from dqf.datasets.universe import UniverseDataset
 from dqf.enums import DataType, ValidationStatus, VariableRole
 from dqf.metadata.resolver import MetadataResolver
@@ -208,7 +209,7 @@ class VariablesDataset:
     def resolve_variables(
         self,
         metadata_resolver: MetadataResolver,
-        low_cardinality_threshold: int = 20,
+        cardinality: CardinalityThresholds | None = None,
     ) -> list[Variable]:
         """Create and profile one :class:`~dqf.variable.Variable` per data column.
 
@@ -229,20 +230,20 @@ class VariablesDataset:
             Resolver that selects a
             :class:`~dqf.metadata.base.MetadataBuilderPipeline` for each
             variable.
-        low_cardinality_threshold:
-            Maximum distinct non-null values for a column to be classified as
-            ``NUMERIC_DISCRETE`` (numeric storage) or ``CATEGORICAL``
-            (non-numeric storage) during dtype inference.  Must match the value
-            used when building the metadata resolver so that dtype assignment
-            and metadata profiling agree.  Default ``20``.
+        cardinality:
+            :class:`~dqf.config.CardinalityThresholds` instance.  Pass the
+            **same** instance used to build *metadata_resolver* so that dtype
+            inference and metadata profiling use identical thresholds.  ``None``
+            uses the library defaults (``low=20``, ``high=50``).
         """
+        _card = cardinality if cardinality is not None else CardinalityThresholds()
         data = self.materialise()
         resolved: list[Variable] = []
         for col in data.columns:
             if col == _VD_MATCHED:
                 continue
             v = Variable(name=col, dtype=DataType.PENDING)
-            v.infer_dtype(data[col], low_cardinality_threshold)
+            v.infer_dtype(data[col], _card.low)
             if col == self.universe.target:
                 v.role = VariableRole.TARGET
             metadata_resolver.resolve(v).profile(self, v)
@@ -260,7 +261,7 @@ class VariablesDataset:
         metadata_resolver: MetadataResolver | None = None,
         dataset_name: str = "",
         force: bool = False,
-        low_cardinality_threshold: int = 20,
+        cardinality: CardinalityThresholds | None = None,
     ) -> ValidationReport:
         """Run the full validation pipeline and return a :class:`~dqf.report.ValidationReport`.
 
@@ -295,10 +296,12 @@ class VariablesDataset:
             When ``True``, re-runs validation even if ``self.validation_state``
             is already ``PASSED``.  Also forces re-materialisation of both
             datasets.
-        low_cardinality_threshold:
-            Forwarded to :meth:`resolve_variables` when auto-resolving.
-            Controls the CATEGORICAL / NUMERIC_DISCRETE boundary during dtype
-            inference.  Default ``20``.
+        cardinality:
+            :class:`~dqf.config.CardinalityThresholds` instance forwarded to
+            :meth:`resolve_variables` when auto-resolving.  Pass the **same**
+            instance used to build *metadata_resolver* to keep dtype inference
+            and metadata profiling in sync.  ``None`` uses the library defaults
+            (``low=20``, ``high=50``).
         """
         if self.validation_state == ValidationStatus.PASSED and not force:
             assert self.validation_report is not None
@@ -313,7 +316,7 @@ class VariablesDataset:
 
         # 3. Auto-resolve variables when needed
         if not self.variables and metadata_resolver is not None:
-            self.resolve_variables(metadata_resolver, low_cardinality_threshold)
+            self.resolve_variables(metadata_resolver, cardinality)
 
         # 4. Get per-variable pipelines
         pipelines = check_suite_resolver.resolve_all(self)

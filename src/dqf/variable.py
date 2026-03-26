@@ -44,20 +44,21 @@ class Variable:
         Inference priority
         ------------------
         1. Boolean storage dtype → ``BOOLEAN``
-        2. Distinct non-null values ≤ *low_cardinality_threshold*:
+        2. Numeric storage dtype:
 
-           - Numeric storage dtype → ``NUMERIC_DISCRETE``
-             (e.g. ``{0, 1, 2, 3}`` stored as ``int64`` — discrete scores,
-             ordinal ratings, count buckets)
-           - All other storage dtypes → ``CATEGORICAL``
-             (e.g. ``{"cat", "dog"}`` stored as ``object``)
+           - Distinct non-null values ≤ *low_cardinality_threshold*
+             → ``NUMERIC_DISCRETE``
+             (e.g. ``{0, 1, 2, 3}`` stored as ``int64``)
+           - Otherwise → ``NUMERIC_CONTINUOUS``
 
-        3. Numeric storage dtype → ``NUMERIC_CONTINUOUS``
-        4. Datetime storage dtype → ``DATETIME``
-        5. Object/string: ≥95 % of non-null values coerce to numeric
+        3. Datetime storage dtype → ``DATETIME``
+        4. Object/string: ≥95 % of non-null values coerce to numeric
            → ``NUMERIC_CONTINUOUS``
-        6. Object/string: ≥95 % of non-null values coerce to datetime
+        5. Object/string: ≥95 % of non-null values coerce to datetime
            → ``DATETIME``
+        6. Distinct non-null values ≤ *low_cardinality_threshold*
+           → ``CATEGORICAL``
+           (e.g. ``{"cat", "dog"}`` stored as ``object``)
         7. Default → ``TEXT``
 
         Parameters
@@ -77,15 +78,12 @@ class Variable:
             return
 
         non_null = series.dropna()
-        if non_null.nunique() <= low_cardinality_threshold:
-            if pd.api.types.is_numeric_dtype(series):
-                self.dtype = DataType.NUMERIC_DISCRETE
-            else:
-                self.dtype = DataType.CATEGORICAL
-            return
 
         if pd.api.types.is_numeric_dtype(series):
-            self.dtype = DataType.NUMERIC_CONTINUOUS
+            if non_null.nunique() <= low_cardinality_threshold:
+                self.dtype = DataType.NUMERIC_DISCRETE
+            else:
+                self.dtype = DataType.NUMERIC_CONTINUOUS
             return
 
         if pd.api.types.is_datetime64_any_dtype(series):
@@ -100,6 +98,10 @@ class Variable:
             if pd.to_datetime(non_null, errors="coerce").notna().mean() >= _COERCE_THRESHOLD:
                 self.dtype = DataType.DATETIME
                 return
+
+        if non_null.nunique() <= low_cardinality_threshold:
+            self.dtype = DataType.CATEGORICAL
+            return
 
         self.dtype = DataType.TEXT
 

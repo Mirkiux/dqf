@@ -330,7 +330,7 @@ def build_default_metadata_resolver(
         thresholds = CardinalityThresholds(low=10, high=30)
         check_resolver = build_default_resolver(cardinality=thresholds)
         metadata_resolver = build_default_metadata_resolver(cardinality=thresholds)
-        dataset.resolve_variables(metadata_resolver, low_cardinality_threshold=thresholds.low)
+        dataset.resolve_variables(metadata_resolver, cardinality=thresholds)
 
     Domain-specific override at higher priority::
 

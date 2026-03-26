@@ -42,7 +42,9 @@ variables_df = pd.DataFrame(
 #  at priority 50, which beats the default NUMERIC_CONTINUOUS rule at 15.
 # ──────────────────────────────────────────────────────────────────────────────
 
-metadata_resolver = dqf.build_default_metadata_resolver(high_cardinality_threshold=10)
+metadata_resolver = dqf.build_default_metadata_resolver(
+    cardinality=dqf.CardinalityThresholds(high=10)
+)
 
 metadata_resolver.register(
     predicate=lambda v: v.name == "credit_score",
@@ -59,7 +61,9 @@ metadata_resolver.register(
 # 3.  Build the default check resolver and add domain-specific rules
 # ──────────────────────────────────────────────────────────────────────────────
 
-resolver = dqf.build_default_resolver(null_threshold=0.05, max_categorical_cardinality=10)
+resolver = dqf.build_default_resolver(
+    null_threshold=0.05, cardinality=dqf.CardinalityThresholds(high=10)
+)
 
 # credit_score must be in [300, 850] — override the generic NUMERIC_CONTINUOUS rule
 resolver.register(

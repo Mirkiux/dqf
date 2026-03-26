@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -97,9 +98,10 @@ class StructuralBreakCheck(BaseLongitudinalCheck):
         else:
             cusum = np.cumsum(values - mean)
             cusum_stat = float(np.abs(cusum).max() / std)
+        passed = cusum_stat <= self._cusum_threshold
         return CheckResult(
             check_name=self.name,
-            passed=cusum_stat <= self._cusum_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(cusum_stat, 4),
             population_size=population_size,
@@ -109,4 +111,7 @@ class StructuralBreakCheck(BaseLongitudinalCheck):
                 "series_mean": round(mean, 4),
                 "series_std": round(std, 4),
             },
+            figure_factory=figures.structural_break_figure(
+                timeseries_df, cusum_stat, self._cusum_threshold, passed, variable.name
+            ),
         )

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from scipy import stats
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -91,12 +92,16 @@ class TrendCheck(BaseLongitudinalCheck):
         tau, p_value = stats.kendalltau(range(n), values)
         tau_f = float(tau)
         p_f = float(p_value)
+        passed = p_f > self._p_threshold
         return CheckResult(
             check_name=self.name,
-            passed=p_f > self._p_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(tau_f, 4),
             population_size=population_size,
             threshold=self._p_threshold,
             metadata={"p_value": round(p_f, 6), "tau": round(tau_f, 4), "n_periods": n},
+            figure_factory=figures.trend_figure(
+                timeseries_df, tau_f, p_f, self._p_threshold, passed, variable.name
+            ),
         )

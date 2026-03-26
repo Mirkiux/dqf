@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from scipy import stats
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -137,9 +138,10 @@ class SeasonalityCheck(BaseLongitudinalCheck):
         # scipy >=1.11 returns NaN when all values are identical — no seasonal signal
         if math.isnan(p_f) or math.isnan(stat_f):
             return _constant_result
+        passed = p_f > self._p_threshold
         return CheckResult(
             check_name=self.name,
-            passed=p_f > self._p_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(stat_f, 4),
             population_size=population_size,
@@ -149,4 +151,8 @@ class SeasonalityCheck(BaseLongitudinalCheck):
                 "n_periods": n,
                 "n_seasons": self._season_length,
             },
+            figure_factory=figures.seasonality_figure(
+                groups, stat_f, p_f, self._p_threshold,
+                self._season_length, passed, variable.name,
+            ),
         )

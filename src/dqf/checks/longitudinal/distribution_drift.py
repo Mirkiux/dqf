@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -135,9 +136,10 @@ class DistributionDriftCheck(BaseLongitudinalCheck):
             cur_pct = (cur_counts + _EPSILON) / (cur_counts.sum() + _EPSILON * n_bins)
             psi = float(np.sum((cur_pct - ref_pct) * np.log(cur_pct / ref_pct)))
 
+        passed = psi <= self._psi_threshold
         return CheckResult(
             check_name=self.name,
-            passed=psi <= self._psi_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(psi, 4),
             population_size=population_size,
@@ -146,4 +148,7 @@ class DistributionDriftCheck(BaseLongitudinalCheck):
                 "n_reference_periods": len(reference),
                 "n_current_periods": len(current),
             },
+            figure_factory=figures.distribution_drift_figure(
+                timeseries_df, reference, current, psi, self._psi_threshold, passed, variable.name
+            ),
         )

@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from scipy.stats import chi2_contingency
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -167,9 +168,10 @@ class ChiSquaredDriftCheck(BaseLongitudinalCheck):
             for cat, cnt in test_counts.items():
                 baseline_counts[cat] = baseline_counts.get(cat, 0) + cnt
 
+        passed = min_p > self._p_threshold
         return CheckResult(
             check_name=self.name,
-            passed=min_p > self._p_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(min_p, 6),
             population_size=population_size,
@@ -179,4 +181,7 @@ class ChiSquaredDriftCheck(BaseLongitudinalCheck):
                 "n_periods": n,
                 "baseline_periods": half,
             },
+            figure_factory=figures.chisquared_drift_figure(
+                df, half, min_p, self._p_threshold, passed, variable.name
+            ),
         )

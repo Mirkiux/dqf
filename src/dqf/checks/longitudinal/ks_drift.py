@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 from scipy.stats import ks_2samp
 
 from dqf.checks.base import BaseLongitudinalCheck
+from dqf.checks.longitudinal import figures
 from dqf.enums import Severity
 from dqf.results import CheckResult
 from dqf.variable import Variable
@@ -137,9 +138,19 @@ class KSDriftCheck(BaseLongitudinalCheck):
 
             baseline_values.extend(test_vals)
 
+        # Precompute ECDF points to avoid retaining full raw distributions in the closure
+        ecdf_by_period: dict[str, tuple[list[float], list[float]]] = {}
+        for p in periods_sorted:
+            vals = period_values.get(p, [])
+            if len(vals) >= 2:
+                sv = sorted(vals)
+                ey = [i / len(sv) for i in range(1, len(sv) + 1)]
+                ecdf_by_period[p] = (sv, ey)
+
+        passed = min_p > self._p_threshold
         return CheckResult(
             check_name=self.name,
-            passed=min_p > self._p_threshold,
+            passed=passed,
             severity=self.severity,
             observed_value=round(min_p, 6),
             population_size=population_size,
@@ -149,4 +160,13 @@ class KSDriftCheck(BaseLongitudinalCheck):
                 "n_periods": n,
                 "baseline_periods": half,
             },
+            figure_factory=figures.ks_drift_figure(
+                ecdf_by_period,
+                periods_sorted,
+                half,
+                min_p,
+                self._p_threshold,
+                passed,
+                variable.name,
+            ),
         )

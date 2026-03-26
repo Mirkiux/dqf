@@ -217,7 +217,7 @@ def chisquared_drift_figure(
         ax.axvline(x=_half - 0.5, linestyle="--", color="black", linewidth=1.0, label="split")
         ax.set_ylim(0, 1)
         ax.set_title(
-            f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, threshold p ≤ {_thr})"
+            f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, threshold p = {_thr})"
         )
         ax.set_xlabel("Period")
         ax.set_ylabel("Proportion")

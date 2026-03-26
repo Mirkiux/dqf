@@ -68,7 +68,7 @@ def trend_figure(
                 linewidth=1.5,
                 label=f"trend (τ={_tau:.3f}, p={_p:.4f})",
             )
-        ax.set_title(f"{_var} — Trend  (p threshold ≤ {_thr})")
+        ax.set_title(f"{_var} — Trend  (pass if p > {_thr})")
         ax.set_xlabel("Period")
         ax.tick_params(axis="x", rotation=45, labelsize=8)
         ax.legend(fontsize=8)

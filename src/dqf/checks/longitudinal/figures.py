@@ -68,7 +68,7 @@ def trend_figure(
                 linewidth=1.5,
                 label=f"trend (τ={_tau:.3f}, p={_p:.4f})",
             )
-        ax.set_title(f"{_var} — Trend  (pass if p > {_thr})")
+        ax.set_title(f"{_var} — Trend  (fail if p ≤ {_thr})")
         ax.set_xlabel("Period")
         ax.tick_params(axis="x", rotation=45, labelsize=8)
         ax.legend(fontsize=8)
@@ -163,7 +163,7 @@ def seasonality_figure(
         ax.set_xticks(range(1, n + 1))
         ax.set_xticklabels(labels, fontsize=8)
         ax.set_title(
-            f"{_var} — Seasonality  (H = {_stat:.3f}, p = {_p:.4f}, threshold p ≤ {_thr})"
+            f"{_var} — Seasonality  (H = {_stat:.3f}, p = {_p:.4f}, fail if p ≤ {_thr})"
         )
         ax.set_xlabel(f"Season position  (cycle length = {_sl})")
         ax.set_ylabel("metric")
@@ -217,7 +217,7 @@ def chisquared_drift_figure(
         ax.axvline(x=_half - 0.5, linestyle="--", color="black", linewidth=1.0, label="split")
         ax.set_ylim(0, 1)
         ax.set_title(
-            f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, threshold p = {_thr})"
+            f"{_var} — Chi-Squared Drift  (min p = {_min_p:.4f}, fail if p ≤ {_thr})"
         )
         ax.set_xlabel("Period")
         ax.set_ylabel("Proportion")
@@ -234,7 +234,7 @@ def chisquared_drift_figure(
 
 
 def ks_drift_figure(
-    period_values: dict[str, list[float]],
+    ecdf_by_period: dict[str, tuple[list[float], list[float]]],
     periods_sorted: list[str],
     half: int,
     min_p: float,
@@ -242,8 +242,12 @@ def ks_drift_figure(
     passed: bool,
     variable_name: str,
 ) -> Callable[[], Figure]:
-    """Empirical CDF per period — baseline periods in blue, test periods in result colour."""
-    _pv = {k: list(v) for k, v in period_values.items()}
+    """Empirical CDF per period — baseline periods in blue, test periods in result colour.
+
+    Accepts pre-computed ECDF points (x, y) per period to avoid retaining
+    full raw value arrays in the closure for the report's lifetime.
+    """
+    _ecdf = {k: (list(v[0]), list(v[1])) for k, v in ecdf_by_period.items()}
     _periods = list(periods_sorted)
     _half, _min_p, _thr, _passed, _var = half, min_p, p_threshold, passed, variable_name
 
@@ -254,11 +258,10 @@ def ks_drift_figure(
         legend_added: set[str] = set()
 
         for i, p in enumerate(_periods):
-            vals = _pv.get(p, [])
-            if len(vals) < 2:
+            ecdf = _ecdf.get(p)
+            if ecdf is None:
                 continue
-            vals_sorted = sorted(vals)
-            ecdf_y = np.arange(1, len(vals_sorted) + 1) / len(vals_sorted)
+            x_pts, y_pts = ecdf
             is_baseline = i < _half
             color = _BLUE if is_baseline else _result_color(_passed)
             alpha = 0.35 + 0.45 * (i / max(n - 1, 1))
@@ -266,17 +269,10 @@ def ks_drift_figure(
             label = legend_key if legend_key not in legend_added else None
             if label:
                 legend_added.add(legend_key)
-            ax.step(
-                vals_sorted,
-                ecdf_y,
-                where="post",
-                color=color,
-                alpha=alpha,
-                linewidth=1.2,
-                label=label,
-            )
+            ax.step(x_pts, y_pts, where="post", color=color, alpha=alpha,
+                    linewidth=1.2, label=label)
 
-        ax.set_title(f"{_var} — KS Drift  (min p = {_min_p:.4f}, fail if p ≤ {_thr})")
+        ax.set_title(f"{_var} — KS Drift  (fail if p ≤ {_thr}, min p = {_min_p:.4f})")
         ax.set_xlabel("value")
         ax.set_ylabel("ECDF")
         ax.legend(fontsize=8)
@@ -340,7 +336,7 @@ def proportion_drift_figure(
         ax.axvline(x=_half - 0.5, linestyle="--", color="black", linewidth=1.0, label="split")
         ax.set_ylim(0, 1)
         ax.set_title(
-            f"{_var} — Proportion Drift  (min p = {_min_p:.4f}, threshold p ≤ {_thr})"
+            f"{_var} — Proportion Drift  (fail if p ≤ {_thr}, min p = {_min_p:.4f})"
         )
         ax.set_xlabel("Period")
         ax.set_ylabel("Proportion")

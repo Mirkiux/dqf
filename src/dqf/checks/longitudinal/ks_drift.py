@@ -138,6 +138,15 @@ class KSDriftCheck(BaseLongitudinalCheck):
 
             baseline_values.extend(test_vals)
 
+        # Precompute ECDF points to avoid retaining full raw distributions in the closure
+        ecdf_by_period: dict[str, tuple[list[float], list[float]]] = {}
+        for p in periods_sorted:
+            vals = period_values.get(p, [])
+            if len(vals) >= 2:
+                sv = sorted(vals)
+                ey = [i / len(sv) for i in range(1, len(sv) + 1)]
+                ecdf_by_period[p] = (sv, ey)
+
         passed = min_p > self._p_threshold
         return CheckResult(
             check_name=self.name,
@@ -152,6 +161,7 @@ class KSDriftCheck(BaseLongitudinalCheck):
                 "baseline_periods": half,
             },
             figure_factory=figures.ks_drift_figure(
-                period_values, periods_sorted, half, min_p, self._p_threshold, passed, variable.name
+                ecdf_by_period, periods_sorted, half,
+                min_p, self._p_threshold, passed, variable.name,
             ),
         )

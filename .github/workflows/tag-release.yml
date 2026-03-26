@@ -1,0 +1,38 @@
+name: Tag release
+
+# Fires when pyproject.toml is updated on main (i.e. a version-bump PR lands).
+# Reads the version, creates the matching vX.Y.Z tag, and pushes it.
+# The publish.yml workflow then triggers from that tag push.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - pyproject.toml
+
+jobs:
+  tag:
+    name: Create version tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from pyproject.toml
+        id: version
+        run: |
+          VERSION=$(python - <<'EOF'
+          import tomllib
+          with open("pyproject.toml", "rb") as f:
+              print(tomllib.load(f)["project"]["version"])
+          EOF
+          )
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push tag
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"

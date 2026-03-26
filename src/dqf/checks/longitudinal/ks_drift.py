@@ -83,7 +83,7 @@ class KSDriftCheck(BaseLongitudinalCheck):
     @staticmethod
     def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         return (
-            f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
+            f"SELECT CAST(DATE_TRUNC('{period}', {time_field}) AS DATE) AS period,"
             + f" CAST({variable_name} AS DOUBLE) AS value"
             + " FROM ({source}) _vd"
             + f" WHERE {variable_name} IS NOT NULL"

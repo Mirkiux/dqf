@@ -101,7 +101,7 @@ class ProportionDriftCheck(BaseLongitudinalCheck):
     @staticmethod
     def aggregation_sql(variable_name: str, time_field: str, period: str) -> str:
         return (
-            f"SELECT DATE_TRUNC('{period}', {time_field}) AS period,"
+            f"SELECT CAST(DATE_TRUNC('{period}', {time_field}) AS DATE) AS period,"
             + f" SUM(CASE WHEN CAST({variable_name} AS DOUBLE) = 1.0"
             + " THEN 1 ELSE 0 END) AS positive,"
             + f" COUNT({variable_name}) AS n"

@@ -1,0 +1,1593 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://mirkiux.github.io/dqf/plan_05_metadata/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Plan 5 — Metadata Subsystem - dqf — Data Quality Framework</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#plan-5-metadata-subsystem" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="dqf — Data Quality Framework" class="md-header__button md-logo" aria-label="dqf — Data Quality Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            dqf — Data Quality Framework
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Plan 5 — Metadata Subsystem
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Mirkiux/dqf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Mirkiux/dqf
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../concepts/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Concepts
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../examples/01_basic_validation/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="dqf — Data Quality Framework" class="md-nav__button md-logo" aria-label="dqf — Data Quality Framework" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    dqf — Data Quality Framework
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Mirkiux/dqf" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Mirkiux/dqf
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/enums/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Enumerations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/variable/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Variable
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/adapters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Adapters
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/checks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/checks/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/checks/cross_sectional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cross-sectional
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/checks/longitudinal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Longitudinal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/resolver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resolver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/datasets/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/defaults/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Default Resolver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/report/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/01_basic_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/02_longitudinal_validation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Longitudinal validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/03_custom_resolver/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Custom resolver
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/04_target_drift/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Target drift
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#goal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Goal
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-specification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detailed Specification
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Detailed Specification">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basemetadatabuilder-abstract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BaseMetadataBuilder (Abstract)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metadatabuilderpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MetadataBuilderPipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#concrete-builders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Concrete Builders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cardinalitybuilder-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CardinalityBuilder configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#semantictypeinferencebuilder-inference-rules-in-priority-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SemanticTypeInferenceBuilder inference rules (in priority order)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#engine-agnosticism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Engine Agnosticism
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explicit-test-case-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicit Test Case Specifications
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Explicit Test Case Specifications">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#class-testbasemetadatabuilderabstract" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestBaseMetadataBuilderAbstract
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-teststoragedtypebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestStorageDtypeBuilder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-testnullabilityprofilebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestNullabilityProfileBuilder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-testcardinalitybuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestCardinalityBuilder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-testdistributionshapebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestDistributionShapeBuilder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-testsemantictypeinferencebuilder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestSemanticTypeInferenceBuilder
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-testmetadatabuilderpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class TestMetadataBuilderPipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#definition-of-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition of Done
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="plan-5-metadata-subsystem">Plan 5 — Metadata Subsystem<a class="headerlink" href="#plan-5-metadata-subsystem" title="Permanent link">&para;</a></h1>
+<h2 id="goal">Goal<a class="headerlink" href="#goal" title="Permanent link">&para;</a></h2>
+<p>Implement the metadata builder abstraction and all concrete builders. Builders profile a <code>pd.Series</code> and return a flat dict to be merged into <code>Variable.metadata</code>. Rich metadata is what enables the <code>CheckSuiteResolver</code> to make good dispatch decisions.</p>
+<h2 id="scope">Scope<a class="headerlink" href="#scope" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BaseMetadataBuilder</code>, <code>MetadataBuilderPipeline</code></td>
+<td><code>src/dqf/metadata/base.py</code></td>
+</tr>
+<tr>
+<td><code>StorageDtypeBuilder</code></td>
+<td><code>src/dqf/metadata/builders/dtype_builder.py</code></td>
+</tr>
+<tr>
+<td><code>NullabilityProfileBuilder</code></td>
+<td><code>src/dqf/metadata/builders/nullability_builder.py</code></td>
+</tr>
+<tr>
+<td><code>CardinalityBuilder</code></td>
+<td><code>src/dqf/metadata/builders/cardinality_builder.py</code></td>
+</tr>
+<tr>
+<td><code>DistributionShapeBuilder</code></td>
+<td><code>src/dqf/metadata/builders/distribution_builder.py</code></td>
+</tr>
+<tr>
+<td><code>SemanticTypeInferenceBuilder</code></td>
+<td><code>src/dqf/metadata/builders/semantic_builder.py</code></td>
+</tr>
+<tr>
+<td>Public exports</td>
+<td><code>src/dqf/metadata/__init__.py</code>, <code>src/dqf/metadata/builders/__init__.py</code></td>
+</tr>
+<tr>
+<td>Unit tests</td>
+<td><code>tests/test_metadata.py</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="detailed-specification">Detailed Specification<a class="headerlink" href="#detailed-specification" title="Permanent link">&para;</a></h2>
+<h3 id="basemetadatabuilder-abstract"><code>BaseMetadataBuilder</code> (Abstract)<a class="headerlink" href="#basemetadatabuilder-abstract" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>name: str</code> — abstract property</li>
+<li><code>profile(series: pd.Series, variable: Variable) -&gt; dict[str, Any]</code> — abstract method; inspects the series, returns a flat dict of keys to add to <code>variable.metadata</code></li>
+</ul>
+<h3 id="metadatabuilderpipeline"><code>MetadataBuilderPipeline</code><a class="headerlink" href="#metadatabuilderpipeline" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>__init__(steps: list[tuple[str, BaseMetadataBuilder]])</code> — list of (name, builder) pairs</li>
+<li><code>name</code> property returns <code>"pipeline"</code></li>
+<li><code>profile(series, variable)</code> — calls each builder in order, merges all returned dicts together, updates <code>variable.metadata</code> in-place, and returns the merged dict</li>
+<li>Composite pattern: <code>MetadataBuilderPipeline</code> is itself a <code>BaseMetadataBuilder</code></li>
+</ul>
+<h3 id="concrete-builders">Concrete Builders<a class="headerlink" href="#concrete-builders" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Builder</th>
+<th><code>name</code></th>
+<th>Keys added to <code>variable.metadata</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>StorageDtypeBuilder</code></td>
+<td><code>"storage_dtype"</code></td>
+<td><code>storage_dtype</code> (pandas dtype as string, e.g. <code>"int64"</code>, <code>"object"</code>)</td>
+</tr>
+<tr>
+<td><code>NullabilityProfileBuilder</code></td>
+<td><code>"nullability"</code></td>
+<td><code>empirical_null_rate</code> (float 0–1), <code>null_count</code> (int), <code>is_nullable</code> (bool: True if null_count &gt; 0)</td>
+</tr>
+<tr>
+<td><code>CardinalityBuilder</code></td>
+<td><code>"cardinality"</code></td>
+<td><code>cardinality</code> (int: number of unique non-null values), <code>is_high_cardinality</code> (bool: cardinality &gt; threshold)</td>
+</tr>
+<tr>
+<td><code>DistributionShapeBuilder</code></td>
+<td><code>"distribution"</code></td>
+<td><code>mean</code>, <code>std</code>, <code>min</code>, <code>max</code>, <code>skewness</code>, <code>kurtosis</code> (all floats); returns <code>{}</code> if series is not numeric</td>
+</tr>
+<tr>
+<td><code>SemanticTypeInferenceBuilder</code></td>
+<td><code>"semantic_type"</code></td>
+<td><code>semantic_dtype</code> (a <code>DataType</code> enum member)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="cardinalitybuilder-configuration"><code>CardinalityBuilder</code> configuration<a class="headerlink" href="#cardinalitybuilder-configuration" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>__init__(high_cardinality_threshold: int = 50)</code> — threshold is constructor-injected, not hardcoded</li>
+</ul>
+<h3 id="semantictypeinferencebuilder-inference-rules-in-priority-order"><code>SemanticTypeInferenceBuilder</code> inference rules (in priority order)<a class="headerlink" href="#semantictypeinferencebuilder-inference-rules-in-priority-order" title="Permanent link">&para;</a></h3>
+<ol>
+<li>If pandas dtype is bool → <code>DataType.BOOLEAN</code></li>
+<li>If pandas dtype is numeric (int or float) → <code>DataType.NUMERIC_CONTINUOUS</code></li>
+<li>If pandas dtype is datetime → <code>DataType.DATETIME</code></li>
+<li>If object/string dtype: attempt <code>pd.to_numeric</code> on non-null values; if conversion succeeds for ≥ 95% → <code>DataType.NUMERIC_CONTINUOUS</code></li>
+<li>If object/string dtype: attempt <code>pd.to_datetime</code> on non-null values; if conversion succeeds for ≥ 95% → <code>DataType.DATETIME</code></li>
+<li>If unique non-null count ≤ 20 → <code>DataType.CATEGORICAL</code></li>
+<li>Default → <code>DataType.TEXT</code></li>
+</ol>
+<h3 id="engine-agnosticism">Engine Agnosticism<a class="headerlink" href="#engine-agnosticism" title="Permanent link">&para;</a></h3>
+<p>All builders receive a <code>pd.Series</code>. The caller is responsible for materializing data via the adapter before passing columns to builders. Builders never import any database or Spark library.</p>
+<h2 id="explicit-test-case-specifications">Explicit Test Case Specifications<a class="headerlink" href="#explicit-test-case-specifications" title="Permanent link">&para;</a></h2>
+<h3 id="class-testbasemetadatabuilderabstract">Class <code>TestBaseMetadataBuilderAbstract</code><a class="headerlink" href="#class-testbasemetadatabuilderabstract" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_cannot_instantiate_abstract_class</code> — <code>BaseMetadataBuilder()</code> raises <code>TypeError</code></li>
+</ol>
+<h3 id="class-teststoragedtypebuilder">Class <code>TestStorageDtypeBuilder</code><a class="headerlink" href="#class-teststoragedtypebuilder" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_storage_dtype</code> — <code>builder.name == "storage_dtype"</code></li>
+<li><code>test_int64_series_returns_int64</code> — <code>pd.Series([1, 2, 3], dtype="int64")</code> → <code>{"storage_dtype": "int64"}</code></li>
+<li><code>test_float_series_returns_float64</code> — <code>pd.Series([1.0, 2.0])</code> → <code>{"storage_dtype": "float64"}</code></li>
+<li><code>test_object_series_returns_object</code> — <code>pd.Series(["a", "b"])</code> → <code>{"storage_dtype": "object"}</code></li>
+<li><code>test_updates_variable_metadata</code> — after <code>profile()</code>, <code>variable.metadata["storage_dtype"]</code> is set</li>
+</ol>
+<h3 id="class-testnullabilityprofilebuilder">Class <code>TestNullabilityProfileBuilder</code><a class="headerlink" href="#class-testnullabilityprofilebuilder" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_nullability</code> — <code>builder.name == "nullability"</code></li>
+<li><code>test_no_nulls</code> — all-non-null series → <code>null_count=0</code>, <code>empirical_null_rate=0.0</code>, <code>is_nullable=False</code></li>
+<li><code>test_with_nulls</code> — <code>pd.Series([1.0, None, 3.0])</code> → <code>null_count=1</code>, <code>empirical_null_rate=approx(1/3)</code>, <code>is_nullable=True</code></li>
+<li><code>test_all_nulls</code> — <code>pd.Series([None, None])</code> → <code>null_count=2</code>, <code>empirical_null_rate=1.0</code>, <code>is_nullable=True</code></li>
+<li><code>test_updates_variable_metadata</code> — after <code>profile()</code>, keys present in <code>variable.metadata</code></li>
+</ol>
+<h3 id="class-testcardinalitybuilder">Class <code>TestCardinalityBuilder</code><a class="headerlink" href="#class-testcardinalitybuilder" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_cardinality</code> — <code>builder.name == "cardinality"</code></li>
+<li><code>test_cardinality_counts_unique_nonnull</code> — <code>pd.Series([1, 2, 2, None])</code> → <code>cardinality=2</code></li>
+<li><code>test_is_high_cardinality_false</code> — 3 unique values, threshold=50 → <code>is_high_cardinality=False</code></li>
+<li><code>test_is_high_cardinality_true</code> — 100 unique values, threshold=50 → <code>is_high_cardinality=True</code></li>
+<li><code>test_custom_threshold</code> — <code>CardinalityBuilder(high_cardinality_threshold=5)</code>, 6 unique values → <code>is_high_cardinality=True</code></li>
+<li><code>test_updates_variable_metadata</code> — after <code>profile()</code>, keys present in <code>variable.metadata</code></li>
+</ol>
+<h3 id="class-testdistributionshapebuilder">Class <code>TestDistributionShapeBuilder</code><a class="headerlink" href="#class-testdistributionshapebuilder" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_distribution</code> — <code>builder.name == "distribution"</code></li>
+<li><code>test_numeric_series_returns_all_keys</code> — <code>pd.Series([1.0, 2.0, 3.0, 4.0, 5.0])</code> → result has keys <code>mean</code>, <code>std</code>, <code>min</code>, <code>max</code>, <code>skewness</code>, <code>kurtosis</code></li>
+<li><code>test_mean_value_correct</code> — series <code>[1, 2, 3]</code> → <code>mean == pytest.approx(2.0)</code></li>
+<li><code>test_non_numeric_returns_empty_dict</code> — <code>pd.Series(["a", "b", "c"])</code> → <code>{}</code></li>
+<li><code>test_non_numeric_does_not_update_variable_metadata</code> — string series → <code>variable.metadata</code> unchanged after <code>profile()</code></li>
+<li><code>test_updates_variable_metadata_for_numeric</code> — numeric series → keys present in <code>variable.metadata</code></li>
+</ol>
+<h3 id="class-testsemantictypeinferencebuilder">Class <code>TestSemanticTypeInferenceBuilder</code><a class="headerlink" href="#class-testsemantictypeinferencebuilder" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_semantic_type</code> — <code>builder.name == "semantic_type"</code></li>
+<li><code>test_bool_series_infers_boolean</code> — <code>pd.Series([True, False])</code> → <code>semantic_dtype == DataType.BOOLEAN</code></li>
+<li><code>test_int_series_infers_numeric_continuous</code> — <code>pd.Series([1, 2, 3])</code> → <code>DataType.NUMERIC_CONTINUOUS</code></li>
+<li><code>test_float_series_infers_numeric_continuous</code> — <code>pd.Series([1.0, 2.5])</code> → <code>DataType.NUMERIC_CONTINUOUS</code></li>
+<li><code>test_datetime_series_infers_datetime</code> — <code>pd.Series(pd.to_datetime(["2024-01-01"]))</code> → <code>DataType.DATETIME</code></li>
+<li><code>test_string_numeric_infers_numeric</code> — <code>pd.Series(["1", "2", "3"])</code> → <code>DataType.NUMERIC_CONTINUOUS</code></li>
+<li><code>test_string_datetime_infers_datetime</code> — <code>pd.Series(["2024-01-01", "2024-01-02"])</code> → <code>DataType.DATETIME</code></li>
+<li><code>test_low_cardinality_string_infers_categorical</code> — <code>pd.Series(["cat", "dog", "cat"])</code> → <code>DataType.CATEGORICAL</code></li>
+<li><code>test_high_cardinality_string_infers_text</code> — series of 30 distinct strings → <code>DataType.TEXT</code></li>
+<li><code>test_updates_variable_metadata</code> — after <code>profile()</code>, <code>variable.metadata["semantic_dtype"]</code> is set</li>
+</ol>
+<h3 id="class-testmetadatabuilderpipeline">Class <code>TestMetadataBuilderPipeline</code><a class="headerlink" href="#class-testmetadatabuilderpipeline" title="Permanent link">&para;</a></h3>
+<ol>
+<li><code>test_name_is_pipeline</code> — <code>pipeline.name == "pipeline"</code></li>
+<li><code>test_empty_pipeline_returns_empty_dict</code> — zero steps → <code>profile()</code> returns <code>{}</code></li>
+<li><code>test_single_builder_result_merged</code> — pipeline with one <code>StorageDtypeBuilder</code> → result contains <code>storage_dtype</code> key</li>
+<li><code>test_two_builders_merged</code> — pipeline with <code>StorageDtypeBuilder</code> + <code>NullabilityProfileBuilder</code> → result contains keys from both</li>
+<li><code>test_variable_metadata_updated_in_place</code> — after pipeline <code>profile()</code>, <code>variable.metadata</code> contains all merged keys</li>
+<li><code>test_pipeline_is_base_metadata_builder</code> — <code>isinstance(pipeline, BaseMetadataBuilder)</code> is <code>True</code></li>
+</ol>
+<h2 id="definition-of-done">Definition of Done<a class="headerlink" href="#definition-of-done" title="Permanent link">&para;</a></h2>
+<ul>
+<li>[ ] All five concrete builders implemented</li>
+<li>[ ] <code>MetadataBuilderPipeline</code> chains and merges correctly</li>
+<li>[ ] <code>SemanticTypeInferenceBuilder</code> correctly infers numeric/datetime from varchar series</li>
+<li>[ ] All builders gracefully skip inapplicable columns (e.g. <code>DistributionShapeBuilder</code> on a string column returns <code>{}</code>)</li>
+<li>[ ] <code>tests/test_metadata.py</code> has all 39 test cases above</li>
+<li>[ ] All CI jobs pass (lint, typecheck, test 3.10–3.14)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

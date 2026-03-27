@@ -11,6 +11,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.10] — 2026-03-27
+
+### Fixed
+
+- `VariablesDataset.validate_pk_uniqueness`: now checks the raw variables dataset (`_fetch_raw_variables()`) instead of the materialised universe-anchored join. The previous behaviour tested the joined result, which implicitly validated universe PK uniqueness rather than the variables dataset's own primary key.
+- `VariablesDataset.resolve_variables`: column discovery now iterates over the raw variables dataset instead of the materialised join. This prevents universe-only columns (columns present in the universe but absent from the variables dataset) from being registered as `Variable` objects and dispatched to check pipelines. Variable-side join key columns whose name differs from the corresponding universe-side column are still excluded because they are dropped by the merge and cannot be accessed by metadata builders via `dataset.materialise()`.
+
+---
+
 ## [0.1.9] — 2026-03-26
 
 ### Fixed
@@ -205,7 +214,8 @@ Initial release. Full implementation of the composable data quality validation f
 - 480 unit and integration tests (pytest)
 - 4 worked example scripts in `examples/`
 
-[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.9...HEAD
+[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/Mirkiux/dqf/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/Mirkiux/dqf/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/Mirkiux/dqf/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/Mirkiux/dqf/compare/v0.1.6...v0.1.7

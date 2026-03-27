@@ -152,8 +152,8 @@ class VariablesDataset:
     # ------------------------------------------------------------------
 
     def validate_pk_uniqueness(self) -> ValidationResult:
-        """Check that *primary_key* columns form a unique key in the materialised data."""
-        data = self.materialise()
+        """Check that *primary_key* columns form a unique key in the variables dataset."""
+        data = self._fetch_raw_variables()
         has_duplicates = data.duplicated(subset=self.primary_key).any()
         self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,
@@ -237,10 +237,16 @@ class VariablesDataset:
             uses the library defaults (``low=20``, ``high=50``).
         """
         _card = cardinality if cardinality is not None else CardinalityThresholds()
-        data = self.materialise()
+        data = self._fetch_raw_variables()
+        # Join key columns whose variable-side name differs from the universe-side
+        # name are dropped by materialise(); skip them so metadata builders can
+        # always access the column via dataset.materialise()[variable.name].
+        dropped_join_keys = {
+            var_col for var_col, uni_col in self.join_keys.items() if var_col != uni_col
+        }
         resolved: list[Variable] = []
         for col in data.columns:
-            if col == _VD_MATCHED:
+            if col in dropped_join_keys:
                 continue
             v = Variable(name=col, dtype=DataType.PENDING)
             v.infer_dtype(data[col], _card.low)

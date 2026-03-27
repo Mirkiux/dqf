@@ -11,6 +11,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.1.11] — 2026-03-27
+
+### Fixed
+
+- Re-release of 0.1.10: version number incremented to clear a PyPI conflict caused by an earlier failed publish attempt for that tag.
+
+---
+
 ## [0.1.10] — 2026-03-27
 
 ### Fixed
@@ -213,7 +221,8 @@ Initial release. Full implementation of the composable data quality validation f
 - 480 unit and integration tests (pytest)
 - 4 worked example scripts in `examples/`
 
-[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/Mirkiux/dqf/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/Mirkiux/dqf/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/Mirkiux/dqf/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/Mirkiux/dqf/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/Mirkiux/dqf/compare/v0.1.7...v0.1.8

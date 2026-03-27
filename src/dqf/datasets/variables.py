@@ -152,8 +152,8 @@ class VariablesDataset:
     # ------------------------------------------------------------------
 
     def validate_pk_uniqueness(self) -> ValidationResult:
-        """Check that *primary_key* columns form a unique key in the materialised data."""
-        data = self.materialise()
+        """Check that *primary_key* columns form a unique key in the variables dataset."""
+        data = self._fetch_raw_variables()
         has_duplicates = data.duplicated(subset=self.primary_key).any()
         self.pk_validation = ValidationResult(
             check_name=_PK_CHECK,

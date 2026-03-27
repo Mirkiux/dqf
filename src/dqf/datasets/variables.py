@@ -237,16 +237,10 @@ class VariablesDataset:
             uses the library defaults (``low=20``, ``high=50``).
         """
         _card = cardinality if cardinality is not None else CardinalityThresholds()
-        data = self._fetch_raw_variables()
-        # Join key columns whose variable-side name differs from the universe-side
-        # name are dropped by materialise(); skip them so metadata builders can
-        # always access the column via dataset.materialise()[variable.name].
-        dropped_join_keys = {
-            var_col for var_col, uni_col in self.join_keys.items() if var_col != uni_col
-        }
+        data = self.materialise()
         resolved: list[Variable] = []
         for col in data.columns:
-            if col in dropped_join_keys:
+            if col == _VD_MATCHED:
                 continue
             v = Variable(name=col, dtype=DataType.PENDING)
             v.infer_dtype(data[col], _card.low)
